@@ -28,12 +28,13 @@ def query(sql=""):
         return results
 
 
-"""
-    根据sql插入或更新数据
-    args: sql
-    return: is_success，1:成功 0失败
-"""
+
 def excute(sql=""):
+    """
+        根据sql插入或更新数据
+        args: sql
+        return: is_success，1:成功 0失败
+    """
     is_success = 1
     db = pymysql.connect(**cf.db_config)
     cur = db.cursor()
