@@ -2,8 +2,8 @@
 __author__ = 'lux'
 
 
-from api import index
-from api import create_app
+from app import index
+from app import create_app
 
 
 app = create_app("DevelopConfig")
