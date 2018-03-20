@@ -7,8 +7,7 @@ import config as cf
 from copy import copy
 
 
-
-""" 
+"""
     根据sql查询结果
     args: sql
     return: results 返回结果(1,"test")
@@ -26,8 +25,6 @@ def query(sql=""):
         cur.close()
         db.close()  # 关闭连接
         return results
-
-
 
 
 """

@@ -3,6 +3,7 @@ __author__ = 'lux'
 
 import os
 
+
 # 开发环境
 class DevelopConfig:
     # FLASK启动配置
@@ -19,11 +20,10 @@ class DeployConfig:
     SECRET_KEY = os.urandom(24)    # SESSION配置
 
 
-
 config = {
     "DevelopConfig": DevelopConfig,
-    "DeployConfig" : DeployConfig
-}
+    "DeployConfig": DeployConfig
+    }
 
 db_config = {
     'host': '127.0.0.1',
