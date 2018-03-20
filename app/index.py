@@ -39,7 +39,7 @@ def test_db_insert():
     sql = "update tbl_test set name='%s' where id=2" % name
     db.excute(sql)
 
-    return redirect(url_for("bp.test_db_query"))# 重定向到test_db_query接口
+    return redirect(url_for("bp.test_db_query"))  # 重定向到test_db_query接口
 
 
 @bp.route("/test_db_excutemany/")
@@ -49,5 +49,4 @@ def test_db_excutemany():
     sql2 = "insert into tbl_test values(NULL,'%s')" % name
     db.excutemany([sql1, sql2])
 
-    return redirect(url_for("bp.test_db_query"))# 重定向到test_db_query接口
-
+    return redirect(url_for("bp.test_db_query"))  # 重定向到test_db_query接口
