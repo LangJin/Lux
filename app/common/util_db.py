@@ -7,12 +7,13 @@ import config as cf
 from copy import copy
 
 
-"""
-    根据sql查询结果
-    args: sql
-    return: results 返回结果(1,"test")
-"""
+
 def query(sql=""):
+    """
+        根据sql查询结果
+        args: sql
+        return: results 返回结果(1,"test")
+    """
     results = []
     db = pymysql.connect(**cf.db_config)
     cur = db.cursor()
