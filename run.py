@@ -1,8 +1,5 @@
 # -*- coding:utf-8 -*-
 __author__ = 'lux'
-
-
-from app import index
 from app import create_app
 
 
