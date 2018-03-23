@@ -72,7 +72,7 @@ def excutemany(sqls=[]):
 
 
 if __name__ == "__main__":
-    data = query("select * from tbl_test")
+    data = query("select * from tbl_user where username='1' and password='1'")
     print(data)
 
     # 测试单条insert
