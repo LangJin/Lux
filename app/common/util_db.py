@@ -7,7 +7,6 @@ import config as cf
 from copy import copy
 
 
-
 def query(sql=""):
     """
         根据sql查询结果
@@ -26,7 +25,6 @@ def query(sql=""):
         cur.close()
         db.close()  # 关闭连接
         return results
-
 
 
 def excute(sql=""):
@@ -72,9 +70,7 @@ def excutemany(sqls=[]):
         return is_success
 
 
-
 if __name__ == "__main__":
-
     data = query("select * from tbl_test")
     print(data)
 
