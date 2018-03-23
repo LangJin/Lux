@@ -48,12 +48,13 @@ def excute(sql=""):
         return is_success
 
 
-"""
-    执行多条插入或更新语句，级联提交时可使用此方法
-    args: [sql1, sql2,...]
-    return: is_success，1:成功 0失败
-"""
 def excutemany(sqls=[]):
+    """
+        执行多条插入或更新语句，级联提交时可使用此方法
+        args: [sql1, sql2,...]
+        return: is_success，1:成功 0失败
+    """
+
     is_success = 1
     db = pymysql.connect(**cf.db_config)
     cur = db.cursor()
