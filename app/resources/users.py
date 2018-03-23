@@ -65,10 +65,9 @@ def user_login():
     if captcha == "123456":
         query_login_sql = "select * from tbl_user where username='%s' and password='%s'" % (username, password)
         if query(query_login_sql):
-            json(get_json(url="/"))
+            return json(get_json(url="/"))
 
-    response = get_json(code="-100", msg="login failed", url="")
-    return json(response)
+    return json(get_json(code="-100", msg="login failed", url=""))
 
 
 @bp.route("/userRegist/", methods=["POST"])
