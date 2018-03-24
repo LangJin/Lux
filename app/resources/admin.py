@@ -20,7 +20,7 @@ def adminlogin():
         result = query("SELECT * FROM tbl_admin where username = '%s' and password = '%s';" % (username, password))
         if len(result) == 1:
             token = create_token()
-            # session(token)
+            session['token'] = token
             excute("UPDATE `tbl_admin` SET `token`='%s' WHERE (`id`='%d') LIMIT 1" % (token, result[0][0]))
             response = {}
             response["code"] = 200
@@ -39,3 +39,15 @@ def adminlogin():
         response["data"] = 0
         response["msg"] = "账号或者密码不能为空。"
         return jsonify(response)
+
+
+@bp.route('/logout')
+def logout():
+    # 如果会话中有用户名就删除它。
+    # 同时从客户端浏览器中删除 session的 name属性
+    session.pop('token', None)
+    response = {}
+    response["code"] = 200
+    response["data"] = 1
+    response["msg"] = "退出登陆"
+    return jsonify(response)
