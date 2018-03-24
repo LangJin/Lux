@@ -90,3 +90,4 @@ def user_regist():
     if excute(user_reg_sql) == 1:
         return json(get_json(url="/loginPage.html"))
     return json(get_json(code=-100, msg="regist falied" ,url=""))
+
