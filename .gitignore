@@ -94,13 +94,11 @@ luxenv/
 
 # Rope project settings
 .ropeproject
+.idea/
+.vscode/
 
 # mkdocs documentation
 /site
 
 # mypy
 .mypy_cache/
-
-# IDE
-.idea/
-.vscode/
