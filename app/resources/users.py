@@ -15,6 +15,7 @@ def _is_logined():
     return False
 
 
+
 @bp.route("/")
 def index():
     """ 首页接口
@@ -26,8 +27,7 @@ def index():
     # 查询用户信息
     datas["user"] = []
     if _is_logined():
-        query_user_sql = "select * from tbl_user where id = %s" % session.get("user")
-        datas["user"] = query(query_user_sql)
+        datas["user"] = session.get("user")
 
     # 查询文章信息
     articles = []
@@ -64,7 +64,9 @@ def user_login():
     # 修改验证码
     if captcha == "123456":
         query_login_sql = "select * from tbl_user where username='%s' and password='%s'" % (username, password)
-        if query(query_login_sql):
+        result = query(query_login_sql)
+        if result:
+            session["user"] = result
             return json(get_json(url="/"))
 
     return json(get_json(code="-100", msg="login failed", url=""))
@@ -88,3 +90,4 @@ def user_regist():
     if excute(user_reg_sql) == 1:
         return json(get_json(url="/loginPage.html"))
     return json(get_json(code=-100, msg="regist falied" ,url=""))
+

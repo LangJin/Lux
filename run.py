@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 __author__ = 'lux'
 from app import create_app
-from app.resources import users
+from app.resources import users, admin
 
 
 app = create_app("DevelopConfig")

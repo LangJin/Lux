@@ -29,6 +29,7 @@ CREATE TABLE `tbl_admin` (
   `username` varchar(255) NOT NULL COMMENT '用户名',
   `password` varchar(255) NOT NULL COMMENT '密码',
   `status` int(1) NOT NULL COMMENT '状态',
+  `token` varchar(255) NOT NULL COMMENT 'token',
   `remark` varchar(255) NOT NULL COMMENT '备注',
   `createDate` datetime NOT NULL COMMENT '创建时间',
   `updateDate` datetime DEFAULT NULL COMMENT '修改时间',
