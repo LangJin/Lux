@@ -1,10 +1,10 @@
 # -*- coding:utf-8 -*-
 __author__ = 'snake'
 
-
 import pymysql.cursors
 import config as cf
 from copy import copy
+from app.common.util_date import decode_result_date
 
 
 def query(sql=""):
@@ -18,7 +18,7 @@ def query(sql=""):
     cur = db.cursor()
     try:
         cur.execute(sql)  # 执行sql语句
-        results = copy(cur.fetchall())  # 获取查询的所有记录
+        results = decode_result_date(copy(cur.fetchall()))  # 获取查询的所有记录
     except Exception as e:
         raise e
     finally:

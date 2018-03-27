@@ -9,6 +9,7 @@ class DevelopConfig:
     # FLASK启动配置
     DEBUG = True
     HOST = "0.0.0.0"
+    JSON_AS_ASCII = False #json 中文支持
     SECRET_KEY = os.urandom(24)    # SESSION配置
 
 
@@ -17,6 +18,8 @@ class DeployConfig:
     # FLASK启动配置
     DEBUG = True
     HOST = "0.0.0.0"
+    JSON_AS_ASCII = False #json 中文支持
+    BABEL_DEFAULT_LOCALE = 'zh'
     SECRET_KEY = os.urandom(24)    # SESSION配置
 
 
