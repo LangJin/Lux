@@ -12,14 +12,13 @@ def decode_result_date(datas):
     :return: [[]] 返回list列表
     """
     results = []
-    for index in range(len(datas)):
+    for data in datas:
         tmp_list = []
-        old_data = datas[index]
-        for i in range(len(old_data)):
-            if isinstance(old_data[i], datetime):
-                tmp_list.append(old_data[i].strftime('%Y-%m-%d %H:%M:%S'))
+        for item in data:
+            if isinstance(item, datetime):
+                tmp_list.append(item.strftime('%Y-%m-%d %H:%M:%S'))
             else:
-                tmp_list.append(old_data[i])
+                tmp_list.append(item)
         results.append(tmp_list)
 
     return results

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文件上传demo</title>
+</head>
+<br>
+    <h1>用户header上传示例</h1>
+    <br>第一个input为file类型
+    <br>第二个input为上传图片的来源
+    <hr>
+    <form action="/upload/" enctype='multipart/form-data' method='POST'>
+        <input type="file" name="file">
+        <input type="hidden" name="source" id="source" value="userHeadImage"/>
+        <input type="submit" value="上传">
+    </form>
+    <hr>
+    <hr>
+
+    <h1>文章header上传示例</h1>
+    <br>第一个input为file类型
+    <br>第二个input为上传图片的来源
+    <br>第三个文章id
+    <hr>
+    <form action="/upload/" enctype='multipart/form-data' method='POST'>
+        <input type="file" name="file">
+        <input type="hidden" name="source" id="source" value="articleHeadImage"/>
+        <input type="hidden" name="articleId" id="articleId" value="1"/>
+        <input type="submit" value="上传">
+    </form>
+    <hr>
+
+
+</body>
+</html>
