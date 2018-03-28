@@ -1,12 +1,14 @@
 # -*- conding:utf-8 -*-
 __author__ = "LangJin"
 from app import bp
-from flask import jsonify, request, flash, session
+from flask import jsonify as json, request, flash, session
 from app.common.util_db import query, excute
 from app.common.util_date import create_token
+from app.common.util_json import get_json
 
 
-@bp.route("/adminlogin", methods=["post"])
+
+@bp.route("/adminLogin/", methods=["post"])
 def adminlogin():
     '''
     管理员登陆
@@ -26,22 +28,22 @@ def adminlogin():
             response["code"] = 200
             response["data"] = {"token":token}
             response["msg"] = "登陆成功！"
-            return jsonify(response)
+            return json(response)
         else:
             response = {}
             response["code"] = 200
             response["data"] = 0
             response["msg"] = "账号或者密码错误！"
-            return jsonify(response)
+            return json(response)
     else:
         response = {}
         response["code"] = 200
         response["data"] = 0
         response["msg"] = "账号或者密码不能为空。"
-        return jsonify(response)
+        return json(response)
 
 
-@bp.route('/logout')
+@bp.route('/adminLogout/')
 def logout():
     # 如果会话中有用户名就删除它。
     # 同时从客户端浏览器中删除 session的 name属性
@@ -50,4 +52,10 @@ def logout():
     response["code"] = 200
     response["data"] = 1
     response["msg"] = "退出登陆"
-    return jsonify(response)
+    return json(response)
+
+
+
+@bp.route("/adminIndex/")
+def admin_index():
+    return json(get_json())

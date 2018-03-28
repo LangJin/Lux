@@ -172,28 +172,25 @@ def user_index():
     """
     datas = {}
     user = session.get("user")
-    # 历史评论 格式：[{"article": (), "comment": ()}]
-    article_comments = {}
-    query_comment_his_sql = "select * from tbl_article_comment where userId='%s' and status=1 LIMIT 10" % user[0][0]
-    for comment in query(query_comment_his_sql):
-        article_id = comment[2]
-        query_article_comment_sql = "select * from tbl_article where id='%s' and status=1" % article_id  # 默认文章1状态为有效
-        article_comments.append({"article": query(query_article_comment_sql), "comment": comment})
-    datas["comments"] = article_comments
+
+    query_comment_his_sql = "select * from tbl_article_comment as a join tbl_article as b where a.articleId=b.id and a.userId=%d and a.status=1 and b.status=1 limit 10" % \
+                            user[0][0]
+    datas["comments"] = query(query_comment_his_sql)
 
     # 收藏文章
-    query_collect_sql = "select a.* from tbl_article as a RIGHT JOIN tbl_article_collect as b on a.id=b.articleId and b.userId=%s and status=1" % \
+    query_collect_sql = "select a.* from tbl_article as a JOIN tbl_article_collect as b on a.id=b.articleId and b.userId=%s and a.status=1 and b.status=1 limit 10" % \
                         user[0][0]
+    print(query_collect_sql)
     datas["collects"] = query(query_collect_sql)
 
     # 浏览记录
-    query_browsing_his_sql = "select a.* from tbl_article as a RIGHT JOIN tbl_article_browsing_history as b on a.id=b.articleId and b.userId=%s and status=1" % \
+    query_browsing_his_sql = "select a.* from tbl_article as a JOIN tbl_article_browsing_history as b on a.id=b.articleId and b.userId=%d and a.status=1 and b.status=1 limit 10" % \
                              user[0][0]
     datas["browsing"] = query(query_browsing_his_sql)
 
     # 个人喜欢
-    query_like_sql = "select a.* from tbl_article as a RIGHT JOIN tbl_article_like as b on a.id=b.articleId and b.userId=%s and status=1" % \
-                     user[0][0]
+    query_like_sql = "select a.* from tbl_article as a JOIN tbl_article_like as b on a.id=b.articleId and b.userId=%d and a.status = 1 and b.status=1 limit 10" % \
+                     session.get("user")[0][0]
     datas["likes"] = query(query_like_sql)
     # 个人资料
     datas["user_info"] = user
@@ -308,9 +305,14 @@ def article_detailes():
 
     # 首先默认请求此接口为浏览了该文章
     try:
-        # 增加浏览数量
-        new_browsing_sql = "INSERT INTO tbl_article_browsing_history VALUES (NULL, %d, %d, 1, '%s',NULL)" % (user_id, article_id, get_current_time())
-        excute(new_browsing_sql)
+        # 增加浏览数量，如果没有浏览，则增加一条浏览数据，否则修改浏览时间
+        query_article_sql = "select * from tbl_article_browsing_history as a where a.userId=%d and a.articleId=%d and a.status=1" %  (user_id, article_id)
+        if query(query_article_sql):
+            article_browsing_sql = "update tbl_article_browsing_history set updateDate='%s'" % get_current_time()
+            excute(article_browsing_sql)
+        else:
+            article_browsing_sql = "INSERT INTO tbl_article_browsing_history VALUES (NULL, %d, %d, 1, '%s',NULL)" % (user_id, article_id, get_current_time())
+            excute(article_browsing_sql)
 
         # 查询article阅读总数
         query_article_readcount_sql = "select * from tbl_article_browsing_history where articleId=%s" % article_id
@@ -345,6 +347,7 @@ def article_comment():
     # 参数校验
     if not _parameters_filter([article_id, comment_content]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
+
     insert_aritcle_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, NULL)" % (session.get("user")[0][0], article_id, comment_content, get_current_time())
     if excute(insert_aritcle_comment_sql):
         return json(get_json())
@@ -388,8 +391,8 @@ def article_collect():
     # 参数校验
     if not _parameters_filter([article_id]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
-    # 检查是否已经赞过了
-    query_article_collect_detail = "select * from tbl_article_like where userId=%d and articleId=%d and status=1" % (session.get("user")[0][0], article_id)
+    # 检查是否已经收藏过文章
+    query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (session.get("user")[0][0], article_id)
     if query(query_article_collect_detail):
         return json(get_json(code=-100, msg="您已经收藏过此文章了!"))
 
@@ -419,17 +422,21 @@ def article_like():
     if not _parameters_filter([article_id]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
     # 检查是否已经赞过了
-    query_article_like_detail = "select * from tbl_article_like where userId=%d and articleId=%d and status=1" % (session.get("user")[0][0], article_id)
+    query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d and a.status=1" % (session.get("user")[0][0], article_id)
     if query(query_article_like_detail):
         return json(get_json(code=-100, msg="您已经赞过了此文章!"))
 
     # 检查是否存在文章
-    query_article_sql = "select * from tbl_article where id=%d and status=1" % article_id
+    query_article_sql = "select * from tbl_article as a where a.id=%d and a.status=1" % article_id
     if not query(query_article_sql):
         return json(get_json(code=-100, msg="文章不在了...!"))
 
-    insert_article_collect_sql = "insert into tbl_article_like values(NULL, %d, %d, 1, '%s', NULL )" % (session.get("user")[0][0], article_id, get_current_time())
-    if excute(insert_article_collect_sql):
+    query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+    if query(query_article_like_detail):
+        update_article_collect_sql = "update tbl_article_like as a set a.status=1 where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+    else:
+        update_article_collect_sql = "insert into tbl_article_like values(NULL, %d, %d, 1, '%s', NULL )" % (session.get("user")[0][0], article_id, get_current_time())
+    if excute(update_article_collect_sql):
         return json(get_json())
 
     return json(get_json(code=-100, msg="操作失败!"))
@@ -450,12 +457,16 @@ def cancel_article_collent():
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
     # 检查是否已经赞过了
-    query_article_collect_detail = "select * from tbl_article_collect where userId=%d and articleId=%d and status=1" % (session.get("user")[0][0], article_id)
+    query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (session.get("user")[0][0], article_id)
     if not query(query_article_collect_detail):
         return json(get_json(code=-100, msg="您还没有收藏此文章!"))
 
     # 修改状态
-    update_article_collect_sql = "update tbl_article_collect set STATUS=0 where userId=%d and articleId=%d" % (session.get("user")[0][0], article_id)
+    query_article_like_detail = "select * from tbl_article_collect as a  where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+    if query(query_article_like_detail):
+        update_article_collect_sql = "update tbl_article_collect as a set a.status=1 where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+    else:
+        update_article_collect_sql = "update tbl_article_collect as a set a.status=0 where userId=%d and articleId=%d" % (session.get("user")[0][0], article_id)
     if excute(update_article_collect_sql):
         return json(get_json())
 
@@ -477,12 +488,13 @@ def cancel_article_like():
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
     # 检查是否已经赞过了
-    query_article_like_detail = "select * from tbl_article_like where userId=%d and articleId=%d and status=1" % (session.get("user")[0][0], article_id)
+    query_article_like_detail = "select * from tbl_article_like as a where a.userId=%d and a.articleId=%d and a.status=1" % (session.get("user")[0][0], article_id)
     if not query(query_article_like_detail):
         return json(get_json(code=-100, msg="您还没有赞过此文章!"))
 
     # 修改状态
-    update_article_like_sql = "update tbl_article_like set STATUS=0 where userId=%d and articleId=%d" % (session.get("user")[0][0], article_id)
+    update_article_like_sql = "update tbl_article_like as a set a.status=0 where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+    print(update_article_like_sql)
     if excute(update_article_like_sql):
         return json(get_json())
 
