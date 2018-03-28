@@ -22,7 +22,6 @@ class DeployConfig:
     BABEL_DEFAULT_LOCALE = 'zh'
     SECRET_KEY = os.urandom(24)    # SESSION配置
 
-
 config = {
     "DevelopConfig": DevelopConfig,
     "DeployConfig": DeployConfig
@@ -35,4 +34,8 @@ db_config = {
     'password': '123456',
     'db': 'lux',
     'charset': 'utf8mb4'
+}
+
+upload_config = {
+    "UPLOAD_FOLDER":"C:\\Users\\SNake\\PycharmProjects\\Lux\\app\\static\\uploads"
 }
