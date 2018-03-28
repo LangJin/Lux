@@ -275,10 +275,10 @@ def upload():
 
         # 文章header信息更新
         article_id = request.form.get("articleId")
-        if not _parameters_filter([file_source, article_id]):
+        if not _parameters_filter([article_id]):
             return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
-        if file_source == "articleHeadImage" and article_id != None and article_id != "":
+        if file_source == "articleHeadImage":
             update_article_header_sql = "update tbl_article set headImage='%s' where id=%s" % (file_name, article_id)
             if excute(update_article_header_sql):
                 query_article_sql = "select * from tbl_article where id=%s" % article_id
