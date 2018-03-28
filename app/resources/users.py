@@ -180,7 +180,6 @@ def user_index():
     # 收藏文章
     query_collect_sql = "select a.* from tbl_article as a JOIN tbl_article_collect as b on a.id=b.articleId and b.userId=%s and a.status=1 and b.status=1 limit 10" % \
                         user[0][0]
-    print(query_collect_sql)
     datas["collects"] = query(query_collect_sql)
 
     # 浏览记录
@@ -494,7 +493,6 @@ def cancel_article_like():
 
     # 修改状态
     update_article_like_sql = "update tbl_article_like as a set a.status=0 where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
-    print(update_article_like_sql)
     if excute(update_article_like_sql):
         return json(get_json())
 
