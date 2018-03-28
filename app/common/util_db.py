@@ -33,7 +33,7 @@ def excute(sql=""):
         args: sql
         return: is_success，1:成功 0失败
     """
-    is_success = 1
+    is_success = True
     db = pymysql.connect(**cf.db_config)
     cur = db.cursor()
     try:
@@ -41,7 +41,7 @@ def excute(sql=""):
         db.commit()
     except Exception as e:
         db.rollback()
-        is_success = 0
+        is_success = False
     finally:
         cur.close()
         db.close()
@@ -55,7 +55,7 @@ def excutemany(sqls=[]):
         return: is_success，1:成功 0失败
     """
 
-    is_success = 1
+    is_success = True
     db = pymysql.connect(**cf.db_config)
     cur = db.cursor()
     try:
@@ -64,7 +64,7 @@ def excutemany(sqls=[]):
         db.commit()
     except Exception as e:
         db.rollback()
-        is_success = 0
+        is_success = False
     finally:
         cur.close()
         db.close()
