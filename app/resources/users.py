@@ -1,3 +1,6 @@
+# -*- conding:utf-8 -*-
+__author__ = 'snake'
+
 from app import bp
 from functools import wraps
 from app.common import util_db as db
@@ -27,7 +30,7 @@ def _set_user_session(user):
     session["user"] = user
 
 
-def _permission_required(func):
+def _user_permission_required(func):
     """
     登陆装饰器
     :param func:
@@ -153,7 +156,7 @@ def user_regist():
 
 
 @bp.route("/userLogout/")
-@_permission_required
+@_user_permission_required
 def user_logout():
     """
     用户退出，删除session
@@ -164,7 +167,7 @@ def user_logout():
 
 
 @bp.route("/userIndex/")
-@_permission_required
+@_user_permission_required
 def user_index():
     """
     获取用户个人中心信息,包括历史评论、收藏文章、浏览记录、个人资料
@@ -198,7 +201,7 @@ def user_index():
 
 
 @bp.route("/userInfoPage/")
-@_permission_required
+@_user_permission_required
 def user_info_page():
     """
     进入页面时请求此接口
@@ -208,7 +211,7 @@ def user_info_page():
 
 
 @bp.route("/updateUserInfo/", methods=["POST"])
-@_permission_required
+@_user_permission_required
 def update_user_info():
     """
     编辑用户信息
@@ -246,7 +249,7 @@ def upload_page():
 
 
 @bp.route('/upload/', methods=['POST'])
-@_permission_required
+@_user_permission_required
 def upload():
     """
     公共上传资源接口
@@ -333,7 +336,7 @@ def article_detailes():
 
 
 @bp.route("/articleComment/", methods=["POST"])
-@_permission_required
+@_user_permission_required
 def article_comment():
     """
     文章评论
@@ -355,7 +358,7 @@ def article_comment():
 
 
 @bp.route("/replyComment/", methods=["POST"])
-@_permission_required
+@_user_permission_required
 def reply_comment():
     """
     回复评论
@@ -378,7 +381,7 @@ def reply_comment():
 
 
 @bp.route("/articleCollect/", methods=["POST"])
-@_permission_required
+@_user_permission_required
 def article_collect():
     """
     收藏文章
@@ -408,7 +411,7 @@ def article_collect():
 
 
 @bp.route("/articleLike/", methods=["POST"])
-@_permission_required
+@_user_permission_required
 def article_like():
     """
     文章点赞
@@ -442,7 +445,7 @@ def article_like():
 
 
 @bp.route("/cancelArticleCollent/", methods=["POST"])
-@_permission_required
+@_user_permission_required
 def cancel_article_collent():
     """
     取消文章关注
@@ -473,7 +476,7 @@ def cancel_article_collent():
 
 
 @bp.route("/cancelArticleLike/", methods=["POST"])
-@_permission_required
+@_user_permission_required
 def cancel_article_like():
     """
     取消文章点赞
