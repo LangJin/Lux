@@ -262,7 +262,7 @@ def query_conditions_articles():
 
 
 @bp.route("/updateArticle/", methods=["POST"])
-@_admin_parameters_filter
+@_admin_permission_required
 def update_article():
     return json(get_json())
 
