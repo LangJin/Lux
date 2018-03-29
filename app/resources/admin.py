@@ -1,5 +1,6 @@
 # -*- conding:utf-8 -*-
-__author__ = "LangJin"
+__author__ = "snake"
+
 from app import bp
 from functools import wraps
 from flask import jsonify as json, request, flash, session
