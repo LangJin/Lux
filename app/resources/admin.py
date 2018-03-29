@@ -55,7 +55,6 @@ def _set_admin_session(admin):
     session["admin"] = admin
 
 
-
 @bp.route("/adminLogin/", methods=["post"])
 def adminlogin():
     '''
@@ -114,9 +113,7 @@ def admin_index():
     return json(get_json(data=_get_admin_session()))
 
 
-
 # todo 文章管理 增加 修改 删除 查询
-
 @bp.route("/queryAllArticles/")
 @_admin_permission_required
 def query_all_articles():

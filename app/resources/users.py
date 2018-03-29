@@ -70,6 +70,7 @@ def _parameters_filter(paras):
             return False
     return True
 
+
 @bp.route("/")
 def index():
     """
@@ -377,7 +378,6 @@ def reply_comment():
         return json(get_json())
 
     return json(get_json(code=-100, msg="操作失败!"))
-
 
 
 @bp.route("/articleCollect/", methods=["POST"])
