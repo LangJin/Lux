@@ -64,7 +64,6 @@ def excutemany(sqls=[]):
         args: [sql1, sql2,...]
         return: is_success，1:成功 0失败
     """
-
     is_success = True
     db = pymysql.connect(**cf.db_config)
     cur = db.cursor()

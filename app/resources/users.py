@@ -6,7 +6,7 @@ from functools import wraps
 from app.common import util_db as db
 from app.common.util_json import get_json
 from flask import jsonify as json, request, redirect, url_for, session, render_template
-from app.common.util_db import query, excute
+from app.common.util_db import query, excute, excutemany
 from app.common.util_date import get_current_time, create_token
 import os, config
 
@@ -125,7 +125,7 @@ def user_login():
             _set_user_session(result[0])
             return json(get_json())
 
-    return json(get_json(code="-100", msg="login failed", ))
+    return json(get_json(code="-100", msg="登录失败，用户名或密码不正确!", ))
 
 
 @bp.route("/userRegist/", methods=["POST"])
@@ -272,21 +272,50 @@ def upload():
         if file_source == "userHeadImage":
             update_user_header_sql = "update tbl_user set headImage='%s' where id=%s" % (file_name, user.get("id"))
             if excute(update_user_header_sql): # 插入成功,就更新user信息
-                _set_user_session(query("select * from tbl_user where id=%s"% user.get("id"))[0])
+                _set_user_session(query("select * from tbl_user where id=%s" % user.get("id")))
                 return json(get_json(data=user))
 
         # 文章header信息更新
         article_id = request.form.get("articleId")
-        if not _parameters_filter([article_id]):
+        type = request.form.get("type")
+        if not _parameters_filter([article_id, type]):
             return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
-        if file_source == "articleHeadImage":
-            update_article_header_sql = "update tbl_article set headImage='%s' where id=%s" % (file_name, article_id)
-            if excute(update_article_header_sql):
-                query_article_sql = "select * from tbl_article where id=%s" % article_id
-                return json(get_json(data=query(query_article_sql)))
+        """修改图片
+        """
+        datas = {}
+        if file_source == "articleHeadImage" and type == "update":
+            article = query("select * from tbl_article where id=%d") % article_id
+            if len(article) == 0:
+                return json(get_json(code=-100, msg="操作失败，未找到该文章!"))
+            # 获取img_id
+            img_id = article[0].get("imgId")
 
-    return json(get_json(code=-100,msg="操作失败!"))
+            # 执行级联操作，先更新imgsource表，然后再更新article表
+            update_img_source_sql = "update tbl_image_sources set path='%s' where id=%d" % (file_name, img_id)
+            update_article_header_sql = "update tbl_article set imgId=%d where id=%s" % (img_id, article_id)
+            if excutemany([update_img_source_sql, update_article_header_sql]):
+                query_article_sql = "select * from tbl_article where id=%d" % article_id
+                datas["article"] = query(query_article_sql)
+
+                return json(get_json(data=datas))
+
+        """
+            新增文章图片,返回图片id和path给前端
+        """
+        if file_source == "articleHeadImage" and type == "add":
+            # 插入imgSources表
+            insert_img_source_sql = "INSERT INTO tbl_image_sources values(NULL, '%s', 1, '%s', NULL)" % (file_name, get_current_time())
+            if not excute(insert_img_source_sql):
+                return json(get_json(code=-100, msg="上传失败，请联系snake!"))
+
+            # 查询结果并返回
+            query_img_source_sql = "select * from tbl_image_sources where path='%s'" % file_name
+            datas["imageInfo"] = query(query_img_source_sql)[0]
+
+            return json(get_json(data=datas))
+
+    return json(get_json(code=-100, msg="操作失败!"))
 
 
 @bp.route("/articleDatiles/", methods=["POST"])

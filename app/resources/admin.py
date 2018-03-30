@@ -5,7 +5,7 @@ from app import bp
 from functools import wraps
 from flask import jsonify as json, request, flash, session
 from app.common.util_db import query, excute
-from app.common.util_date import create_token
+from app.common.util_date import create_token, get_current_time
 from app.common.util_json import get_json
 
 import math
@@ -170,7 +170,7 @@ def query_paging_articles():
     {
         "code":200                                              # 状态码
         "msg":"ok",                                             # msg
-        "obj":[                                                 # 返回数据对象
+        "data":{                                                 # 返回数据对象
             {"articles":[                                       # 文章列表
                 [文章1],[文章2],[文章3],[文章4], ....[文章10]
             ]},
@@ -181,13 +181,12 @@ def query_paging_articles():
                 "dic_list":[1,4]                                # 通过这个循环来标注下一页 下下一页的参数 例如 articles?p=2;在这里需要post传json格式{"page":1}
             },
             {
-                "show_shouye_status":0                          # 是否显示首页，0为不显示
+                "show_index_status":0                          # 是否显示首页，0为不显示
             },
             {
                 "total":3                                       # 共有几页
             }
-        ],
-        "url":""                                                操作成功后需要跳转的链接
+        }
     }
     """
     paging_info = request.get_json()
@@ -217,8 +216,8 @@ def query_paging_articles():
         "articles": article_list,
         "current_page": int(current_page),
         'total': total,
-        'show_shouye_status': show_shouye_status,
-        'dic_list': dic                             # 下一页或下下一页的参数的循环参数（开始，结束） 在python中表示 range
+        'show_index_status': show_shouye_status,
+        'show_range': dic                             # 下一页或下下一页的参数的循环参数（开始，结束） 在python中表示 range
     }
 
     return json(get_json(data=datas))
@@ -264,9 +263,24 @@ def query_conditions_articles():
     return json(get_json(data=datas))
 
 
-@bp.route("/updateArticle/", methods=["POST"])
+@bp.route("/addArticle/", methods=["POST"])
 @_admin_permission_required
-def update_article():
-    return json(get_json())
+def add_article():
+    article_info = request.get_json()
+    title = article_info.get("title")
+    img_id = article_info.get("imgId")
+    type = article_info.get("type")
+    content = article_info.get("content")
+    source = article_info.get("source")
+    user_id = _get_admin_session().get("id")
+
+    if not _admin_parameters_filter([title, img_id, type, content, source]):
+        return json(get_json(msg="操作失败，参数有误!"))
+
+    insert_article_sql = "INSERT INTO tbl_article VALUES(NULL, '%s', %d, %d, '%s', '%s', 0, 0, 1, %d, '%s', NULL)" % (title, img_id, type, content, source, user_id, get_current_time())
+    if excute(insert_article_sql):
+        return json(get_json())
+
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
 
