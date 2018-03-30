@@ -179,9 +179,7 @@ def user_index():
     获取用户个人中心信息,包括历史评论、收藏文章、浏览记录、个人资料
     :return: json
     """
-    datas = {}
     user = session.get("user")
-
     # 历史浏览
     query_comment_his_sql = "select * from tbl_article_comment as a join tbl_article as b where a.articleId=b.id and a.userId=%d and a.status=1 and b.status=1 limit 10" % user.get("id")
     # 收藏文章
@@ -191,12 +189,8 @@ def user_index():
     # 个人喜欢
     query_like_sql = "select a.* from tbl_article as a JOIN tbl_article_like as b on a.id=b.articleId and b.userId=%d and a.status = 1 and b.status=1 limit 10" % user.get("id")
 
-    datas["user_info"] = user
-    datas["likes"] = query(query_like_sql)
-    datas["comments"] = query(query_comment_his_sql)
-    datas["collects"] = query(query_collect_sql)
-    datas["browsing"] = query(query_browsing_his_sql)
-
+    # 构造响应数据
+    datas = {"user_info":user, "likes":query(query_like_sql), "comments": query(query_comment_his_sql), "collects":query(query_collect_sql), "browsing":query(query_browsing_his_sql)}
     return json(get_json(data=datas))
 
 
