@@ -266,17 +266,22 @@ def query_conditions_articles():
 @bp.route("/addArticle/", methods=["POST"])
 @_admin_permission_required
 def add_article():
+    """
+    新增文章
+    :arg {"title":"title", "imgId":1, "type":2, "content":"test", "source":"123"}
+    :return: json
+    """
     article_info = request.get_json()
+    type = article_info.get("type")
     title = article_info.get("title")
     img_id = article_info.get("imgId")
-    type = article_info.get("type")
-    content = article_info.get("content")
     source = article_info.get("source")
+    content = article_info.get("content")
     user_id = _get_admin_session().get("id")
 
     # 参数校验
     if not _admin_parameters_filter([title, img_id, type, content, source]):
-        return json(get_json(msg="操作失败，参数有误!"))
+        return json(get_json(code=-200, msg="操作失败，参数有误!"))
 
     # 插入文章记录
     insert_article_sql = "INSERT INTO tbl_article VALUES(NULL, '%s', %d, %d, '%s', '%s', 0, 0, 1, %d, '%s', NULL)" % (title, img_id, type, content, source, user_id, get_current_time())
@@ -284,5 +289,81 @@ def add_article():
         return json(get_json())
 
     return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
+
+
+@bp.route("/updateArticle/", methods=["POST"])
+@_admin_permission_required
+def update_article():
+    """
+    更新文章
+    :arg {"id":1, "type":1, "title":"title_test", "source":"1", "status":1, "content":"test_test"}
+    :return:
+    """
+    article_info = request.get_json()
+    id = article_info.get("id")
+    type = article_info.get("type")
+    title = article_info.get("title")
+    source = article_info.get("source")
+    status = article_info.get("status")
+    content = article_info.get("content")
+
+    # 参数校验
+    if not _admin_parameters_filter([id, status, title, type, content, source]):
+        return json(get_json(code=-200, msg="操作失败，参数有误!"))
+
+    # 更新文章
+    update_article_sql = "update tbl_article set title='%s', type=%d, source='%s', status=%d, content='%s', updateDate='%s' where id=%d" % (title, type, source, status, content, get_current_time(), id)
+    if excute(update_article_sql):
+        return json(get_json(msg="更新成功!"))
+
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
+
+
+@bp.route("/deleteArticle/", methods=["POST"])
+@_admin_permission_required
+def delete_article():
+    """
+    删除文章(软删除)
+    :arg {"id":1}
+    :return:
+    """
+    article_info = request.get_json()
+    id = article_info.get("id")
+
+    # 参数校验
+    if not _admin_parameters_filter([id]):
+        return json(get_json(code=-200, msg="操作失败，参数有误!"))
+
+    # 更新文章
+    update_article_sql = "update tbl_article set status=0 where id=%d" % id
+    if excute(update_article_sql):
+        return json(get_json(msg="删除成功!"))
+
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
+
+
+@bp.route("/activeArticle/", methods=["POST"])
+@_admin_permission_required
+def active_article():
+    """
+    激活已删除的文章
+    :arg {"id":1}
+    :return:
+    """
+    article_info = request.get_json()
+    id = article_info.get("id")
+
+    # 参数校验
+    if not _admin_parameters_filter([id]):
+        return json(get_json(code=-200, msg="操作失败，参数有误!"))
+
+    # 更新文章
+    update_article_sql = "update tbl_article set status=1 where id=%d" % id
+    if excute(update_article_sql):
+        return json(get_json(msg="操作成功!"))
+
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
+
+
 
 

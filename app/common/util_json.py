@@ -2,7 +2,7 @@
 __author__ = 'lux'
 
 
-def get_json(code=200, msg="OK", data={}):
+def get_json(code=200, msg="操作成功!", data={}):
     """
         获取指定格式的Json数据
         args:

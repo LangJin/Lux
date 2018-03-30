@@ -125,7 +125,7 @@ def user_login():
         result = query(query_login_sql)
         if result:
             _set_user_session(result[0])
-            return json(get_json())
+            return json(get_json(msg="登录成功!"))
 
     return json(get_json(code="-100", msg="登录失败，用户名或密码不正确!", ))
 
@@ -156,9 +156,9 @@ def user_regist():
     user_reg_sql = "insert into tbl_user values(NULL, '%s', '%s', '%s',1,'','','',NULL,'','','','','','','%s',NULL)" % (
         username, password, nickname, create_date)
     if excute(user_reg_sql):
-        return json(get_json())
+        return json(get_json(msg="注册成功!"))
 
-    return json(get_json(code=-100, msg="regist falied"))
+    return json(get_json(code=-100, msg="注册失败，用户名可能已经存在了!"))
 
 
 @bp.route("/userLogout/")
@@ -319,7 +319,7 @@ def article_detailes():
     :return:
     """
     article_info = request.get_json()
-    article_id = article_info.get("articleId")
+    article_id = article_info.get("id")
     # id为空不允许
     if not _parameters_filter([article_id]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
@@ -371,7 +371,7 @@ def article_comment():
     """
     comments_info = request.get_json()
     user_id = session.get("user").get("id")
-    article_id = comments_info.get("articleId")
+    article_id = comments_info.get("id")
     comment_content = comments_info.get("content")
     # 参数校验
     if not _parameters_filter([article_id, comment_content]):
