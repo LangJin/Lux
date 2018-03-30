@@ -8,7 +8,7 @@ from app.common.util_db import query, excute
 from app.common.util_date import create_token, get_current_time
 from app.common.util_json import get_json
 
-import math
+import math, traceback
 
 
 def _admin_permission_required(func):
@@ -20,7 +20,11 @@ def _admin_permission_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if session.get("admin"):
-            return func(*args, **kwargs)
+            try:
+                return func(*args, **kwargs)
+            except :
+                print(traceback.print_exc())
+                return json(get_json(code=500, msg="内部错误,请检查参数是否正确!"))
         return json(get_json(code=-300, msg="权限错误,请先登录!"))
 
     return wrapper

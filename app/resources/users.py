@@ -8,7 +8,7 @@ from app.common.util_json import get_json
 from flask import jsonify as json, request, redirect, url_for, session, render_template
 from app.common.util_db import query, excute, excutemany
 from app.common.util_date import get_current_time, create_token
-import os, config
+import os, config, traceback
 
 
 def _is_logined():
@@ -39,10 +39,16 @@ def _user_permission_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if session.get("user"):
-            return func(*args, **kwargs)
+            try:
+                return func(*args, **kwargs)
+            except :
+                print(traceback.print_exc())
+                return json(get_json(code=500, msg="内部错误,请检查参数是否正确!"))
         return json(get_json(code=-300, msg="权限错误,请先登录!"))
 
     return wrapper
+
+
 
 
 def _upload_files(file, file_name):
@@ -544,3 +550,7 @@ def cancel_article_like():
 # todo
 # 各个页面入口接口
 
+@bp.route("/codeStatus/", methods=["post", "get"])
+def get_code_status():
+    datas = {"code:-100":"操作失败", "code:-200":"参数错误", "code:-300":"权限出错,需要登录", "code:200":"操作成功", "code:500":"内部异常，通常都是参数传错了"}
+    return json(get_json(msg="状态码说明", data=datas))
