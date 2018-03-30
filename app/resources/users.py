@@ -40,7 +40,7 @@ def _user_permission_required(func):
     def wrapper(*args, **kwargs):
         if session.get("user"):
             return func(*args, **kwargs)
-        return json(get_json(code=-300, msg="权限错误,请先登录!", url="/"))
+        return json(get_json(code=-300, msg="权限错误,请先登录!"))
 
     return wrapper
 
@@ -81,7 +81,7 @@ def index():
     datas = {}  # 返回的数据集，包括用户信息、文章分类和信息、跑马灯、轮播图
     datas["user"] = []  # 用户信息默认值
     if _is_logined():
-        datas["user_info"] = session.get("user")
+        datas["userInfo"] = session.get("user")
 
     # 查询文章信息
     articles = []
@@ -122,10 +122,10 @@ def user_login():
         query_login_sql = "select * from tbl_user where username='%s' and password='%s'" % (username, password)
         result = query(query_login_sql)
         if result:
-            _set_user_session(result)
-            return json(get_json(url="/"))
+            _set_user_session(result[0])
+            return json(get_json())
 
-    return json(get_json(code="-100", msg="login failed", url=""))
+    return json(get_json(code="-100", msg="login failed", ))
 
 
 @bp.route("/userRegist/", methods=["POST"])
@@ -151,9 +151,9 @@ def user_regist():
     user_reg_sql = "insert into tbl_user values(NULL, '%s', '%s', '%s',1,'','','',NULL,'','','','','','','%s',NULL)" % (
         username, password, nickname, create_date)
     if excute(user_reg_sql):
-        return json(get_json(url="/loginPage.html"))
+        return json(get_json())
 
-    return json(get_json(code=-100, msg="regist falied", url=""))
+    return json(get_json(code=-100, msg="regist falied"))
 
 
 @bp.route("/userLogout/")
@@ -164,7 +164,7 @@ def user_logout():
     :return:
     """
     session.pop("user", None)
-    return json(get_json(url="/"))
+    return json(get_json())
 
 
 @bp.route("/userIndex/")
@@ -178,22 +178,22 @@ def user_index():
     user = session.get("user")
 
     query_comment_his_sql = "select * from tbl_article_comment as a join tbl_article as b where a.articleId=b.id and a.userId=%d and a.status=1 and b.status=1 limit 10" % \
-                            user[0][0]
+                            user.get("id")
     datas["comments"] = query(query_comment_his_sql)
 
     # 收藏文章
     query_collect_sql = "select a.* from tbl_article as a JOIN tbl_article_collect as b on a.id=b.articleId and b.userId=%s and a.status=1 and b.status=1 limit 10" % \
-                        user[0][0]
+                        user.get("id")
     datas["collects"] = query(query_collect_sql)
 
     # 浏览记录
     query_browsing_his_sql = "select a.* from tbl_article as a JOIN tbl_article_browsing_history as b on a.id=b.articleId and b.userId=%d and a.status=1 and b.status=1 limit 10" % \
-                             user[0][0]
+                             user.get("id")
     datas["browsing"] = query(query_browsing_his_sql)
 
     # 个人喜欢
     query_like_sql = "select a.* from tbl_article as a JOIN tbl_article_like as b on a.id=b.articleId and b.userId=%d and a.status = 1 and b.status=1 limit 10" % \
-                     session.get("user")[0][0]
+                     user.get("id")
     datas["likes"] = query(query_like_sql)
     # 个人资料
     datas["user_info"] = user
@@ -208,7 +208,7 @@ def user_info_page():
     进入页面时请求此接口
     :return: json
     """
-    return json(get_json(data=session.get("user"),url="/userInfoPage.html"))
+    return json(get_json(data=session.get("user")))
 
 
 @bp.route("/updateUserInfo/", methods=["POST"])
@@ -220,6 +220,7 @@ def update_user_info():
     :return: json
     """
     user_info = request.get_json()
+    id = session.get("user").get("id")
     sex = user_info.get("sex")
     age = int(user_info.get("age"))
     email = user_info.get("email")
@@ -234,12 +235,12 @@ def update_user_info():
 
     # 执行用户信息更新
     update_user_sql = "update tbl_user set nickname='%s',sex='%s',age=%d, email='%s', wechat='%s',remark='%s',address='%s',nickname='%s',signature='%s',cellphone='%s',education='%s',updateDate='%s' where id='%s'" % (
-        nickname, sex, age, email, wechat, remark, address, nickname, signature, cellphone, education, updateDate,
-        session.get("user")[0][0])
+        nickname, sex, age, email, wechat, remark, address, nickname, signature, cellphone, education, updateDate, id)
     # 更新成功则重置session并返回最新的用户信息
     if excute(update_user_sql):
-        _set_user_session(query("select * from tbl_user where id=%s" % session.get("user")[0][0]))
-        return json(get_json(data=session.get("user")))
+        user = query("select * from tbl_user where id=%s" % id)[0]
+        _set_user_session(user)
+        return json(get_json(data={"userInfo": session.get("user")}))
 
     return json(get_json(code=-100, msg="操作失败!"))
 
@@ -263,15 +264,16 @@ def upload():
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
     # 如果上传成功，则进行更新对应的数据来源，如user头像
+    user = session.get("user")
     file = request.files['file']
     file_name = create_token() + "." + file.filename.split(".")[1]
     if _upload_files(file, file_name) == 1:
         # 图片来源为用户头像，更新用户用户头像url
         if file_source == "userHeadImage":
-            update_user_header_sql = "update tbl_user set headImage='%s' where id=%s" % (file_name, session.get("user")[0][0])
+            update_user_header_sql = "update tbl_user set headImage='%s' where id=%s" % (file_name, user.get("id"))
             if excute(update_user_header_sql): # 插入成功,就更新user信息
-                _set_user_session(query("select * from tbl_user where id=%s"%session.get("user")[0][0]))
-                return json(get_json(data=session.get("user")))
+                _set_user_session(query("select * from tbl_user where id=%s"% user.get("id"))[0])
+                return json(get_json(data=user))
 
         # 文章header信息更新
         article_id = request.form.get("articleId")
@@ -301,8 +303,9 @@ def article_detailes():
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
     # -1：未登录用户
-    if session.get("user"):
-        user_id = session.get("user")[0][0]
+    user = session.get("user")
+    if user:
+        user_id = user.get("id")
     else:
         user_id = -1
 
@@ -331,7 +334,7 @@ def article_detailes():
     # 查询文章和对应的评论
     query_article_sql = "select * from tbl_article where id=%s and status=1" % article_id
     query_comments_sql = "select * from tbl_article_comment where articleId=%s and status=1" % article_id
-    results = {"article":query(query_article_sql), "comments":query(query_comments_sql)}
+    results = {"article": query(query_article_sql), "comments": query(query_comments_sql)}
 
     return json(get_json(data=results))
 
@@ -345,13 +348,14 @@ def article_comment():
     :return: json
     """
     comments_info = request.get_json()
+    user_id = session.get("user").get("id")
     article_id = comments_info.get("articleId")
     comment_content = comments_info.get("content")
     # 参数校验
     if not _parameters_filter([article_id, comment_content]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
-    insert_aritcle_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, NULL)" % (session.get("user")[0][0], article_id, comment_content, get_current_time())
+    insert_aritcle_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, NULL)" % (user_id, article_id, comment_content, get_current_time())
     if excute(insert_aritcle_comment_sql):
         return json(get_json())
 
@@ -373,7 +377,12 @@ def reply_comment():
     # 参数校验
     if not _parameters_filter([article_id, comment_id, comment_content]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
-    insert_reply_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, %d)" % (session.get("user")[0][0], article_id, comment_content, get_current_time(), comment_id)
+
+    # 文章下是否有此评论，这里有bug todo
+
+    # 插入数据
+    user_id = session.get("user").get("id")
+    insert_reply_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, %d)" % (user_id, article_id, comment_content, get_current_time(), comment_id)
     if excute(insert_reply_comment_sql):
         return json(get_json())
 
@@ -393,8 +402,10 @@ def article_collect():
     # 参数校验
     if not _parameters_filter([article_id]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
+
     # 检查是否已经收藏过文章
-    query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (session.get("user")[0][0], article_id)
+    user_id = session.get("user").get("id")
+    query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if query(query_article_collect_detail):
         return json(get_json(code=-100, msg="您已经收藏过此文章了!"))
 
@@ -403,7 +414,7 @@ def article_collect():
     if not query(query_article_sql):
         return json(get_json(code=-100, msg="文章不在了...!"))
 
-    insert_article_collect_sql = "insert into tbl_article_collect values(NULL, %d, %d, 1, '%s', NULL )" % (session.get("user")[0][0], article_id, get_current_time())
+    insert_article_collect_sql = "insert into tbl_article_collect values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
     if excute(insert_article_collect_sql):
         return json(get_json())
 
@@ -423,8 +434,10 @@ def article_like():
     # 参数校验
     if not _parameters_filter([article_id]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
+
     # 检查是否已经赞过了
-    query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d and a.status=1" % (session.get("user")[0][0], article_id)
+    user_id = session.get("user").get("id")
+    query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if query(query_article_like_detail):
         return json(get_json(code=-100, msg="您已经赞过了此文章!"))
 
@@ -433,11 +446,11 @@ def article_like():
     if not query(query_article_sql):
         return json(get_json(code=-100, msg="文章不在了...!"))
 
-    query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+    query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if query(query_article_like_detail):
-        update_article_collect_sql = "update tbl_article_like as a set a.status=1 where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+        update_article_collect_sql = "update tbl_article_like as a set a.status=1 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     else:
-        update_article_collect_sql = "insert into tbl_article_like values(NULL, %d, %d, 1, '%s', NULL )" % (session.get("user")[0][0], article_id, get_current_time())
+        update_article_collect_sql = "insert into tbl_article_like values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
     if excute(update_article_collect_sql):
         return json(get_json())
 
@@ -459,16 +472,17 @@ def cancel_article_collent():
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
     # 检查是否已经赞过了
-    query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (session.get("user")[0][0], article_id)
+    user_id = session.get("user").get("id")
+    query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if not query(query_article_collect_detail):
         return json(get_json(code=-100, msg="您还没有收藏此文章!"))
 
     # 修改状态
-    query_article_like_detail = "select * from tbl_article_collect as a  where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+    query_article_like_detail = "select * from tbl_article_collect as a  where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if query(query_article_like_detail):
-        update_article_collect_sql = "update tbl_article_collect as a set a.status=1 where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+        update_article_collect_sql = "update tbl_article_collect as a set a.status=1 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     else:
-        update_article_collect_sql = "update tbl_article_collect as a set a.status=0 where userId=%d and articleId=%d" % (session.get("user")[0][0], article_id)
+        update_article_collect_sql = "update tbl_article_collect as a set a.status=0 where userId=%d and articleId=%d" % (user_id, article_id)
     if excute(update_article_collect_sql):
         return json(get_json())
 
@@ -490,12 +504,13 @@ def cancel_article_like():
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
     # 检查是否已经赞过了
-    query_article_like_detail = "select * from tbl_article_like as a where a.userId=%d and a.articleId=%d and a.status=1" % (session.get("user")[0][0], article_id)
+    user_id = session.get("user").get("id")
+    query_article_like_detail = "select * from tbl_article_like as a where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if not query(query_article_like_detail):
         return json(get_json(code=-100, msg="您还没有赞过此文章!"))
 
     # 修改状态
-    update_article_like_sql = "update tbl_article_like as a set a.status=0 where a.userId=%d and a.articleId=%d" % (session.get("user")[0][0], article_id)
+    update_article_like_sql = "update tbl_article_like as a set a.status=0 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if excute(update_article_like_sql):
         return json(get_json())
 

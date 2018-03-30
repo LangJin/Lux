@@ -21,7 +21,7 @@ def _admin_permission_required(func):
     def wrapper(*args, **kwargs):
         if session.get("admin"):
             return func(*args, **kwargs)
-        return json(get_json(code=-300, msg="权限错误,请先登录!", url="/"))
+        return json(get_json(code=-300, msg="权限错误,请先登录!"))
 
     return wrapper
 
@@ -68,11 +68,11 @@ def adminlogin():
     password = admininfo["password"]
     if username != None and password != None:
         result = query("SELECT * FROM tbl_admin where username = '%s' and password = '%s';" % (username, password))
-        if len(result) == 1:
+        if result:
             token = create_token()
             session['token'] = token
-            session["admin"] = result
-            excute("UPDATE `tbl_admin` SET `token`='%s' WHERE (`id`='%d') LIMIT 1" % (token, result[0][0]))
+            _set_admin_session(result[0])
+            excute("UPDATE `tbl_admin` SET `token`='%s' WHERE (`id`='%d') LIMIT 1" % (token, result[0].get("id")))
             response = {}
             response["code"] = 200
             response["data"] = {"token":token}
@@ -111,7 +111,7 @@ def admin_index():
     管理员首页
     :return:
     """
-    return json(get_json(data=_get_admin_session()))
+    return json(get_json(data={"admin_info":_get_admin_session()}))
 
 
 # todo 文章管理 增加 修改 删除 查询
@@ -123,7 +123,8 @@ def query_all_articles():
     :return: json
     """
     query_articles_sql = "select * from tbl_article order by createDate desc"
-    return json(get_json(data=query(query_articles_sql)))
+    datas = {"articles": query(query_articles_sql)}
+    return json(get_json(data=datas))
 
 
 def _get_page(total, p):
@@ -220,7 +221,7 @@ def query_paging_articles():
         'dic_list': dic                             # 下一页或下下一页的参数的循环参数（开始，结束） 在python中表示 range
     }
 
-    return json(get_json(data=[datas]))
+    return json(get_json(data=datas))
 
 
 @bp.route("/queryConditionsArticles/", methods=["POST"])
@@ -259,7 +260,8 @@ def query_conditions_articles():
         if _admin_parameters_filter([end_date]):
             conditions_sql += "and createDate < '%s'" % end_date
 
-    return json(get_json(data=query(conditions_sql)))
+    datas = {"articles": query(conditions_sql)}
+    return json(get_json(data=datas))
 
 
 @bp.route("/updateArticle/", methods=["POST"])

@@ -2,14 +2,13 @@
 __author__ = 'lux'
 
 
-def get_json(code=200, msg="OK", data=[], url=""):
+def get_json(code=200, msg="OK", data={}):
     """
         获取指定格式的Json数据
         args:
             code=200
             msg="OK"
-            data=[]
-            url="/"
+            data={}
         return: {}
     """
-    return {"code": code, "msg": msg, "url": url, "obj": data}
+    return {"code": code, "msg": msg, "data": data}
