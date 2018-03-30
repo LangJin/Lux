@@ -114,6 +114,8 @@ def user_login():
     captcha = user_info.get("captcha")
     username = user_info.get("username")
     password = user_info.get("password")
+
+    # 参数校验
     if not _parameters_filter([username, password, captcha]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
     # todo
@@ -140,8 +142,11 @@ def user_regist():
     username = user_info.get("username")
     password = user_info.get("password")
     create_date = get_current_time()
+
+    # 参数校验
     if not _parameters_filter([username, password, nickname]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
+
     # 判断用户名是否已被占用
     query_user_sql = "select * from tbl_user where username='%s'" % username
     if query(query_user_sql):
@@ -177,26 +182,20 @@ def user_index():
     datas = {}
     user = session.get("user")
 
-    query_comment_his_sql = "select * from tbl_article_comment as a join tbl_article as b where a.articleId=b.id and a.userId=%d and a.status=1 and b.status=1 limit 10" % \
-                            user.get("id")
-    datas["comments"] = query(query_comment_his_sql)
-
+    # 历史浏览
+    query_comment_his_sql = "select * from tbl_article_comment as a join tbl_article as b where a.articleId=b.id and a.userId=%d and a.status=1 and b.status=1 limit 10" % user.get("id")
     # 收藏文章
-    query_collect_sql = "select a.* from tbl_article as a JOIN tbl_article_collect as b on a.id=b.articleId and b.userId=%s and a.status=1 and b.status=1 limit 10" % \
-                        user.get("id")
-    datas["collects"] = query(query_collect_sql)
-
+    query_collect_sql = "select a.* from tbl_article as a JOIN tbl_article_collect as b on a.id=b.articleId and b.userId=%s and a.status=1 and b.status=1 limit 10" % user.get("id")
     # 浏览记录
-    query_browsing_his_sql = "select a.* from tbl_article as a JOIN tbl_article_browsing_history as b on a.id=b.articleId and b.userId=%d and a.status=1 and b.status=1 limit 10" % \
-                             user.get("id")
-    datas["browsing"] = query(query_browsing_his_sql)
-
+    query_browsing_his_sql = "select a.* from tbl_article as a JOIN tbl_article_browsing_history as b on a.id=b.articleId and b.userId=%d and a.status=1 and b.status=1 limit 10" % user.get("id")
     # 个人喜欢
-    query_like_sql = "select a.* from tbl_article as a JOIN tbl_article_like as b on a.id=b.articleId and b.userId=%d and a.status = 1 and b.status=1 limit 10" % \
-                     user.get("id")
-    datas["likes"] = query(query_like_sql)
-    # 个人资料
+    query_like_sql = "select a.* from tbl_article as a JOIN tbl_article_like as b on a.id=b.articleId and b.userId=%d and a.status = 1 and b.status=1 limit 10" % user.get("id")
+
     datas["user_info"] = user
+    datas["likes"] = query(query_like_sql)
+    datas["comments"] = query(query_comment_his_sql)
+    datas["collects"] = query(query_collect_sql)
+    datas["browsing"] = query(query_browsing_his_sql)
 
     return json(get_json(data=datas))
 
@@ -275,7 +274,7 @@ def upload():
                 _set_user_session(query("select * from tbl_user where id=%s" % user.get("id")))
                 return json(get_json(data=user))
 
-        # 文章header信息更新
+        # 文章header信息更新和参数校验
         article_id = request.form.get("articleId")
         type = request.form.get("type")
         if not _parameters_filter([article_id, type]):
@@ -384,6 +383,7 @@ def article_comment():
     if not _parameters_filter([article_id, comment_content]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
+    # 增加文章评论
     insert_aritcle_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, NULL)" % (user_id, article_id, comment_content, get_current_time())
     if excute(insert_aritcle_comment_sql):
         return json(get_json())
@@ -409,7 +409,7 @@ def reply_comment():
 
     # 文章下是否有此评论，这里有bug todo
 
-    # 插入数据
+    # 增加文章评论
     user_id = session.get("user").get("id")
     insert_reply_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, %d)" % (user_id, article_id, comment_content, get_current_time(), comment_id)
     if excute(insert_reply_comment_sql):
@@ -443,6 +443,7 @@ def article_collect():
     if not query(query_article_sql):
         return json(get_json(code=-100, msg="文章不在了...!"))
 
+    # 增加文章收藏记录
     insert_article_collect_sql = "insert into tbl_article_collect values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
     if excute(insert_article_collect_sql):
         return json(get_json())
@@ -475,6 +476,7 @@ def article_like():
     if not query(query_article_sql):
         return json(get_json(code=-100, msg="文章不在了...!"))
 
+    # 如果存在记录则修改时间，如果没有记录则增加记录
     query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if query(query_article_like_detail):
         update_article_collect_sql = "update tbl_article_like as a set a.status=1 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
@@ -506,7 +508,7 @@ def cancel_article_collent():
     if not query(query_article_collect_detail):
         return json(get_json(code=-100, msg="您还没有收藏此文章!"))
 
-    # 修改状态
+    # 修改状态，如果存在记录就修改，没有就增加
     query_article_like_detail = "select * from tbl_article_collect as a  where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if query(query_article_like_detail):
         update_article_collect_sql = "update tbl_article_collect as a set a.status=1 where a.userId=%d and a.articleId=%d" % (user_id, article_id)

@@ -274,9 +274,11 @@ def add_article():
     source = article_info.get("source")
     user_id = _get_admin_session().get("id")
 
+    # 参数校验
     if not _admin_parameters_filter([title, img_id, type, content, source]):
         return json(get_json(msg="操作失败，参数有误!"))
 
+    # 插入文章记录
     insert_article_sql = "INSERT INTO tbl_article VALUES(NULL, '%s', %d, %d, '%s', '%s', 0, 0, 1, %d, '%s', NULL)" % (title, img_id, type, content, source, user_id, get_current_time())
     if excute(insert_article_sql):
         return json(get_json())
