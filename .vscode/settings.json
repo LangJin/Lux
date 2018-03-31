@@ -1,4 +1,0 @@
-{
-    "python.pythonPath": "${workspaceFolder}\\luxenv\\Scripts\\python.exe",
-    "python.linting.flake8Args": ["--max-line-length=248"]
-}
