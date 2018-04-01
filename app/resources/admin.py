@@ -17,12 +17,13 @@ def _admin_permission_required(func):
     :param func:
     :return: json
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         if session.get("admin"):
             try:
                 return func(*args, **kwargs)
-            except :
+            except:
                 print(traceback.print_exc())
                 return json(get_json(code=500, msg="内部错误,请检查参数是否正确!"))
         return json(get_json(code=-300, msg="权限错误,请先登录!"))
@@ -60,6 +61,38 @@ def _set_admin_session(admin):
     session["admin"] = admin
 
 
+def _get_page(total, p):
+    """
+    计算分页方法
+    :param total: 总数
+    :param p: 当前第几页
+    :return:
+    """
+    show_page = 5  # 显示的页码数
+    pageoffset = 2  # 偏移量
+    start = 1  # 分页条开始
+    end = total  # 分页条结束
+
+    if total > show_page:
+        if p > pageoffset:
+            start = p - pageoffset
+            if total > p + pageoffset:
+                end = p + pageoffset
+            else:
+                end = total
+        else:
+            start = 1
+            if total > show_page:
+                end = show_page
+            else:
+                end = total
+        if p + pageoffset > total:
+            start = start - (p + pageoffset - end)
+    # 用于模版中循环
+    dic = [start, end + 1]
+    return dic
+
+
 @bp.route("/adminLogin/", methods=["post"])
 def adminlogin():
     '''
@@ -79,7 +112,7 @@ def adminlogin():
             excute("UPDATE `tbl_admin` SET `token`='%s' WHERE (`id`='%d') LIMIT 1" % (token, result[0].get("id")))
             response = {}
             response["code"] = 200
-            response["data"] = {"token":token}
+            response["data"] = {"token": token}
             response["msg"] = "登陆成功！"
             return json(response)
         else:
@@ -115,10 +148,9 @@ def admin_index():
     管理员首页
     :return:
     """
-    return json(get_json(data={"admin_info":_get_admin_session()}))
+    return json(get_json(data={"admin_info": _get_admin_session()}))
 
 
-# todo 文章管理 增加 修改 删除 查询
 @bp.route("/queryAllArticles/")
 @_admin_permission_required
 def query_all_articles():
@@ -129,38 +161,6 @@ def query_all_articles():
     query_articles_sql = "select * from tbl_article order by createDate desc"
     datas = {"articles": query(query_articles_sql)}
     return json(get_json(data=datas))
-
-
-def _get_page(total, p):
-    """
-    计算分页方法
-    :param total: 总数
-    :param p: 当前第几页
-    :return:
-    """
-    show_page = 5  # 显示的页码数
-    pageoffset = 2  # 偏移量
-    start = 1  # 分页条开始
-    end = total  # 分页条结束
-
-    if total > show_page:
-        if p > pageoffset:
-            start = p - pageoffset
-            if total > p + pageoffset:
-                end = p + pageoffset
-            else:
-                end = total
-        else:
-            start = 1
-            if total > show_page:
-                end = show_page
-            else:
-                end = total
-        if p + pageoffset > total:
-            start = start - (p + pageoffset - end)
-    # 用于模版中循环
-    dic = [start, end+1]
-    return dic
 
 
 @bp.route("/queryPagingArticles/", methods=["POST"])
@@ -194,7 +194,7 @@ def query_paging_articles():
     }
     """
     paging_info = request.get_json()
-    current_page = paging_info.get("page") # 当前页面
+    current_page = paging_info.get("page")  # 当前页面
     show_shouye_status = 0  # 显示首页状态
     if current_page == '':
         current_page = 1
@@ -212,7 +212,7 @@ def query_paging_articles():
     # 查询总记录和计算总页数
     sql = "select * from tbl_article"
     count = len(query(sql))  # 总记录
-    total = int(math.ceil(count / 10.0)) # 总页数
+    total = int(math.ceil(count / 10.0))  # 总页数
 
     dic = _get_page(total, current_page)
 
@@ -221,7 +221,7 @@ def query_paging_articles():
         "current_page": int(current_page),
         'total': total,
         'show_index_status': show_shouye_status,
-        'show_range': dic                             # 下一页或下下一页的参数的循环参数（开始，结束） 在python中表示 range
+        'show_range': dic  # 下一页或下下一页的参数的循环参数（开始，结束） 在python中表示 range
     }
 
     return json(get_json(data=datas))
@@ -237,21 +237,21 @@ def query_conditions_articles():
     """
     # 文章title查询、状态查询、来源、创建时间范围查询
     conditions = request.get_json()
-    title = conditions.get("title")             # 文章标题
-    status = conditions.get("status")           # 状态
-    source = conditions.get("source")           # 来源
+    title = conditions.get("title")  # 文章标题
+    status = conditions.get("status")  # 状态
+    source = conditions.get("source")  # 来源
 
-    end_date = conditions.get("endDate")       # 结束时间
-    start_date = conditions.get("startDate")   # 开始时间
+    end_date = conditions.get("endDate")  # 结束时间
+    start_date = conditions.get("startDate")  # 开始时间
 
     # 开始构造查询语句，分别根据参数是否为空来构造sql语句
     conditions_sql = "select * from tbl_article where 1=1 "
     if _admin_parameters_filter([title]):
         conditions_sql += "and title like '%" + title + "%' "
     if _admin_parameters_filter([status]):
-        conditions_sql += "and status=%d " %status
+        conditions_sql += "and status=%d " % status
     if _admin_parameters_filter([source]):
-        conditions_sql +="and source like '%" + source + "%' "
+        conditions_sql += "and source like '%" + source + "%' "
 
     # 创建文章的开始和结束时间
     if _admin_parameters_filter([start_date]):
@@ -288,7 +288,8 @@ def add_article():
         return json(get_json(code=-200, msg="操作失败，参数有误!"))
 
     # 插入文章记录
-    insert_article_sql = "INSERT INTO tbl_article VALUES(NULL, '%s', %d, %d, '%s', '%s', 0, 0, 1, %d, '%s', NULL)" % (title, img_id, type, content, source, user_id, get_current_time())
+    insert_article_sql = "INSERT INTO tbl_article VALUES(NULL, '%s', %d, %d, '%s', '%s', 0, 0, 1, %d, '%s', NULL)" % (
+        title, img_id, type, content, source, user_id, get_current_time())
     if excute(insert_article_sql):
         return json(get_json())
 
@@ -316,7 +317,8 @@ def update_article():
         return json(get_json(code=-200, msg="操作失败，参数有误!"))
 
     # 更新文章
-    update_article_sql = "update tbl_article set title='%s', type=%d, source='%s', status=%d, content='%s', updateDate='%s' where id=%d" % (title, type, source, status, content, get_current_time(), id)
+    update_article_sql = "update tbl_article set title='%s', type=%d, source='%s', status=%d, content='%s', updateDate='%s' where id=%d" % (
+        title, type, source, status, content, get_current_time(), id)
     if excute(update_article_sql):
         return json(get_json(msg="更新成功!"))
 
@@ -368,6 +370,268 @@ def active_article():
 
     return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
+
+@bp.route("/queryAllUsers/")
+@_admin_permission_required
+def query_all_users():
+    """
+    查询所有用户
+    :return: json
+    """
+    query_users_sql = "select * from tbl_user"
+    datas = {"users": query(query_users_sql)}
+    return json(get_json(data=datas))
+
+
+@bp.route("/queryPagingAUsers/", methods=["POST"])
+@_admin_permission_required
+def query_paging_users():
+    """
+    用户分页查询
+    :arg {"page":1}
+    :return: json
+    详细格式如下，此接口受前端限制，可能会更改
+    {
+        "code":200                                              # 状态码
+        "msg":"ok",                                             # msg
+        "data":{                                                 # 返回数据对象
+            {"articles":[                                       # 文章列表
+                [用户1],[用户2],[用户3],[用户4], ....[用户10]
+            ]},
+            {
+                "current_page":1                                # 当前页码
+            },
+            {
+                "dic_list":[1,4]                                # 通过这个循环来标注下一页 下下一页的参数 例如 articles?p=2;在这里需要post传json格式{"page":1}
+            },
+            {
+                "show_index_status":0                          # 是否显示首页，0为不显示
+            },
+            {
+                "total":3                                       # 共有几页
+            }
+        }
+    }
+    """
+    paging_info = request.get_json()
+    current_page = paging_info.get("page")  # 当前页面
+    show_shouye_status = 0  # 显示首页状态
+    if current_page == '':
+        current_page = 1
+    else:
+        current_page = int(current_page)
+        if current_page > 1:
+            show_shouye_status = 1
+
+    limit_start = (int(current_page) - 1) * 10
+
+    # 查询n-10*n条记录，首页
+    sql = "select * from tbl_user limit %d,10" % limit_start
+    user_list = query(sql)
+
+    # 查询总记录和计算总页数
+    sql = "select * from tbl_user"
+    count = len(query(sql))  # 总记录
+    total = int(math.ceil(count / 10.0))  # 总页数
+
+    dic = _get_page(total, current_page)
+
+    datas = {
+        "articles": user_list,
+        "current_page": int(current_page),
+        'total': total,
+        'show_index_status': show_shouye_status,
+        'show_range': dic  # 下一页或下下一页的参数的循环参数（开始，结束） 在python中表示 range
+    }
+
+    return json(get_json(data=datas))
+
+
+@bp.route("/queryConditionsUsers/", methods=["POST"])
+@_admin_permission_required
+def query_conditions_users():
+    """
+    多条件联合查询用户
+    :arg {"username":"user1","nickname":"user, "status":1, "sex":"男", "email":"test@qq.com", "phone_num":"15000000000", "wechat":1, "startDate":"2017-03-23 23:59:52", "endDate":"2018-03-28 23:59:52"}
+    :return: json
+    """
+    # 文章title查询、状态查询、来源、创建时间范围查询
+    conditions = request.get_json()
+    username = conditions.get("username")  # 用户名
+    nickname = conditions.get("nickname")  # 昵称
+    status = conditions.get("status")  # 状态
+    sex = conditions.get("sex")  # 性别
+    email = conditions.get("email")  # 邮箱
+    phone_num = conditions.get("cellphone")  # 电话
+    wechat = conditions.get("wechat")  # 微信号
+
+    end_date = conditions.get("endDate")  # 结束时间
+    start_date = conditions.get("startDate")  # 开始时间
+
+    # 开始构造查询语句，分别根据参数是否为空来构造sql语句
+    conditions_sql = "select * from tbl_user where 1=1 "
+    if _admin_parameters_filter([username]):
+        conditions_sql += "and username like '%" + username + "%' "
+    if _admin_parameters_filter([nickname]):
+        conditions_sql += "and nickname like '%" + nickname + "%' "
+    if _admin_parameters_filter([status]):
+        conditions_sql += "and status=%d " % status
+    if _admin_parameters_filter([sex]):
+        conditions_sql += "and sex='%s' " % sex
+    if _admin_parameters_filter([email]):
+        conditions_sql += "and email like '%" + email + "%' "
+    if _admin_parameters_filter([phone_num]):
+        conditions_sql += "and phone_num like '%" + phone_num + "%' "
+    if _admin_parameters_filter([wechat]):
+        conditions_sql += "and wechat like '%" + wechat + "%' "
+
+    # 创建文章的开始和结束时间
+    if _admin_parameters_filter([start_date]):
+        if _admin_parameters_filter([end_date]):
+            conditions_sql += "and createDate > '%s' and createDate < '%s'" % (start_date, end_date)
+        else:
+            conditions_sql += "and createDate > '%s'" % start_date
+    else:
+        if _admin_parameters_filter([end_date]):
+            conditions_sql += "and createDate < '%s'" % end_date
+    print(conditions_sql)
+    datas = {"articles": query(conditions_sql)}
+    return json(get_json(data=datas))
+
+
+@bp.route("/addUser/", methods=["POST"])
+@_admin_permission_required
+def add_user():
+    """
+    新增用户
+    :arg {"username":"user", "password":"123", "nickname":"nickname"}
+    :return: json
+    """
+    user_info = request.get_json()
+    nickname = user_info.get("nickname")
+    username = user_info.get("username")
+    password = user_info.get("password")
+    create_date = get_current_time()
+
+    # 参数校验
+    if not _admin_parameters_filter([username, password, nickname]):
+        return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
+
+    # 判断用户名是否已被占用
+    query_user_sql = "select * from tbl_user where username='%s'" % username
+    if query(query_user_sql):
+        return json(get_json(code=-300, msg="用户名已存在!"))
+
+    # 没被占用，进行注册
+    user_reg_sql = "insert into tbl_user values(NULL, '%s', '%s', '%s',1,'','','',NULL,'','','','','','','%s',NULL)" % (
+        username, password, nickname, create_date)
+    if excute(user_reg_sql):
+        return json(get_json(msg="新增用户成功!"))
+
+    return json(get_json(code=-100, msg="新增用户失败，用户名可能已经存在了!"))
+
+
+@bp.route("/updateUser/", methods=["POST"])
+@_admin_permission_required
+def update_user():
+    """
+    编辑用户信息
+    :arg {"id":1, "status":1, "sex":"男", "age":22, "email":"test@qq.com", "wechat":"snake", "remark":"greate full!", "address":"test", "nickname":"snake", "signature":"signature", "cellphone":"15000000000", "education":"education"}
+    :return: json
+    """
+    user_info = request.get_json()
+    id = user_info.get("id")
+    sex = user_info.get("sex")
+    age = user_info.get("age")
+    email = user_info.get("email")
+    status = user_info.get("status")
+    wechat = user_info.get("wechat")
+    remark = user_info.get("remark")
+    address = user_info.get("address")
+    nickname = user_info.get("nickname")
+    signature = user_info.get("signature")
+    cellphone = user_info.get("cellphone")
+    education = user_info.get("education")
+    updateDate = get_current_time()
+
+    # 执行用户信息更新
+    update_user_sql = "update tbl_user set nickname='%s',sex='%s',age=%d, email='%s', wechat='%s',remark='%s',address='%s',nickname='%s',signature='%s',cellphone='%s',education='%s',updateDate='%s',status=%d where id='%s'" % (
+        nickname, sex, age, email, wechat, remark, address, nickname, signature, cellphone, education, updateDate,
+        status, id)
+    # 更新成功则重置session并返回最新的用户信息
+    if excute(update_user_sql):
+        return json(get_json(msg="修改成功!"))
+
+    return json(get_json(code=-100, msg="修改失败!"))
+
+
+@bp.route("/defriendUser/", methods=["POST"])
+@_admin_permission_required
+def defriend_user():
+    """
+    拉黑用户
+    :arg {"id":1}
+    :return:
+    """
+    user_info = request.get_json()
+    id = user_info.get("id")
+
+    # 参数校验
+    if not _admin_parameters_filter([id]):
+        return json(get_json(code=-200, msg="操作失败，参数有误!"))
+
+    # 更新文章
+    update_article_sql = "update tbl_user set status=0 where id=%d" % id
+    if excute(update_article_sql):
+        return json(get_json(msg="拉黑成功, 该用户被禁止登陆网站!"))  # todo 这里有bug，不能及时踢下线，哈哈哈
+
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
+
+
+@bp.route("/recoverUser/", methods=["POST"])
+@_admin_permission_required
+def recover_user():
+    """
+    恢复用户
+    :arg {"id":1}
+    :return:
+    """
+    user_info = request.get_json()
+    id = user_info.get("id")
+
+    # 参数校验
+    if not _admin_parameters_filter([id]):
+        return json(get_json(code=-200, msg="操作失败，参数有误!"))
+
+    # 更新文章
+    update_article_sql = "update tbl_user set status=1 where id=%d" % id
+    if excute(update_article_sql):
+        return json(get_json(msg="恢复成功, 该用户被禁止登陆网站!"))
+
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
+
+
+@bp.route("/queryAllUserComments/")
+@_admin_permission_required
+def query_all_user_comments():
+    """
+    查询所有用户文章及评论
+    :return: cId,cUserId ... = comment表中的数据，重命名两个表防止冲突
+    """
+    query_all_user_comments_sql = "select b.*," \
+                                  "a.id as cId," \
+                                  "a.userId as cUserId, " \
+                                  "a.articleId as cArticleId, " \
+                                  "a.content as cContent, " \
+                                  "a.status as cStatus, " \
+                                  "a.createDate as cCreateDate," \
+                                  "a.updateDate as cUpdateDate, " \
+                                  "a.fid as cFid " \
+                                  "from tbl_article_comment as a join tbl_article as b where a.articleId=b.id"
+
+    comments = {"articlesAndComments": query(query_all_user_comments_sql)}
+
+    return json(get_json(data=comments))
 
 
 

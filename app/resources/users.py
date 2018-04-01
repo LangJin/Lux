@@ -130,8 +130,11 @@ def user_login():
         query_login_sql = "select * from tbl_user where username='%s' and password='%s'" % (username, password)
         result = query(query_login_sql)
         if result:
-            _set_user_session(result[0])
-            return json(get_json(msg="登录成功!"))
+            if  result[0].get("status") == 1:
+                _set_user_session(result[0])
+                return json(get_json(msg="登录成功!"))
+            else:
+                return json(get_json(msg="登录失败, 您已经禁止登陆网站, 请联系管理员处理!"))
 
     return json(get_json(code="-100", msg="登录失败，用户名或密码不正确!", ))
 
@@ -239,9 +242,9 @@ def update_user_info():
     if excute(update_user_sql):
         user = query("select * from tbl_user where id=%s" % id)[0]
         _set_user_session(user)
-        return json(get_json(data={"userInfo": session.get("user")}))
+        return json(get_json(msg="修改成功", data={"userInfo": session.get("user")}))
 
-    return json(get_json(code=-100, msg="操作失败!"))
+    return json(get_json(code=-100, msg="修改失败!"))
 
 
 @bp.route("/uploadPage/", methods=["GET"])
@@ -349,11 +352,11 @@ def article_detailes():
             excute(article_browsing_sql)
 
         # 查询article阅读总数
-        query_article_readcount_sql = "select * from tbl_article_browsing_history where articleId=%s" % article_id
-        read_counts = len(query(query_article_readcount_sql))
+        query_article_readcount_sql = "select * from tbl_article where id=%d" % article_id
+        read_counts = query(query_article_readcount_sql)[0].get("readCount") + 1
 
         # 更新readCount总数
-        update_article_browsing_count = "update tbl_article set readCount=%d, updateDate='%s' where id=%s" % (read_counts, get_current_time(), article_id)
+        update_article_browsing_count = "update tbl_article set readCount=%d, updateDate='%s' where id=%d" % (read_counts, get_current_time(), article_id)
         excute(update_article_browsing_count)
     except Exception as e:
         print(e)
