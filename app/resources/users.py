@@ -55,14 +55,14 @@ def _upload_files(file, file_name):
     """
     上传图片公共方法
     :param file: 上传的file文件
-    :return: 1:成功;0失败
+    :return: True:成功;False失败
     """
     try:
         upload_path = os.path.join(config.upload_config.get("UPLOAD_FOLDER"), file_name)  # 注意：没有的文件夹一定要先创建，不然会提示没有该路径
         file.save(upload_path)
-        return 1
+        return True
     except:
-        return 0
+        return False
 
 
 def _parameters_filter(paras):
@@ -85,9 +85,6 @@ def index():
     :return json
     """
     datas = {}  # 返回的数据集，包括用户信息、文章分类和信息、跑马灯、轮播图
-    datas["user"] = []  # 用户信息默认值
-    if _is_logined():
-        datas["userInfo"] = session.get("user")
 
     # 查询文章信息
     articles = []
@@ -95,16 +92,17 @@ def index():
         title = "article" + str(type)
         query_article_sql = "select * from tbl_article where type=%s LIMIT 10" % str(type)
         articles.append({title: query(query_article_sql)})
-    datas["articles"] = articles
-
     # 查询跑马灯信息
-    query_anno_sql = "select * from tbl_announcement LIMIT 1,10"
-    datas["annos"] = query(query_anno_sql)
-
+    query_anno_sql = "select * from tbl_announcement where status=1 LIMIT 10"
     # 查询轮播图信息
-    datas["carouses"] = []
-    # todo
-    # 没有轮播图怎么查？
+    query_all_carouses_sql = "select a.*, b.path as imgPath " \
+                             "from tbl_carouse as a JOIN tbl_image_sources as b " \
+                             "where a.imgId=b.id and b.status=1 and a.status=1;"
+
+    datas["articles"] = articles
+    datas["annos"] = query(query_anno_sql)
+    datas["carouses"] = query(query_all_carouses_sql)
+    datas["userInfo"] = session.get("user")
 
     return json(get_json(data=datas))
 
@@ -131,6 +129,8 @@ def user_login():
         result = query(query_login_sql)
         if result:
             if  result[0].get("status") == 1:
+                query_img_sql = "select * from tbl_image_sources where id=%d" % result[0].get("imgId")
+                result[0]["img"] = query(query_img_sql)[0].get("path")
                 _set_user_session(result[0])
                 return json(get_json(msg="登录成功!"))
             else:
@@ -218,13 +218,14 @@ def user_info_page():
 def update_user_info():
     """
     编辑用户信息
-    :arg {"sex":"男", "age":22, "email":"test@qq.com", "wechat":"snake", "remark":"greate full!", "address":"test", "nickname":"snake", "signature":"signature", "cellphone":"15000000000", "education":"education"}
+    :arg {"sex":"男","imgId":1, "age":22, "email":"test@qq.com", "wechat":"snake", "remark":"greate full!", "address":"test", "nickname":"snake", "signature":"signature", "cellphone":"15000000000", "education":"education"}
     :return: json
     """
     user_info = request.get_json()
-    id = session.get("user").get("id")
     sex = user_info.get("sex")
-    age = int(user_info.get("age"))
+    id = session.get("user").get("id")
+    img_id = user_info.get("imgId")
+    age = user_info.get("age")
     email = user_info.get("email")
     wechat = user_info.get("wechat")
     remark = user_info.get("remark")
@@ -236,8 +237,10 @@ def update_user_info():
     updateDate = get_current_time()
 
     # 执行用户信息更新
-    update_user_sql = "update tbl_user set nickname='%s',sex='%s',age=%d, email='%s', wechat='%s',remark='%s',address='%s',nickname='%s',signature='%s',cellphone='%s',education='%s',updateDate='%s' where id='%s'" % (
-        nickname, sex, age, email, wechat, remark, address, nickname, signature, cellphone, education, updateDate, id)
+    update_user_sql = "update tbl_user set nickname='%s', imgId=%d, sex='%s'," \
+                      "age=%d, email='%s', wechat='%s',remark='%s',address='%s'," \
+                      "nickname='%s',signature='%s',cellphone='%s',education='%s',updateDate='%s' where id='%s'" % \
+                      (nickname, img_id, sex, age, email, wechat, remark, address, nickname, signature, cellphone, education, updateDate, id)
     # 更新成功则重置session并返回最新的用户信息
     if excute(update_user_sql):
         user = query("select * from tbl_user where id=%s" % id)[0]
@@ -253,7 +256,6 @@ def upload_page():
 
 
 @bp.route('/upload/', methods=['POST'])
-@_user_permission_required
 def upload():
     """
     公共上传资源接口
@@ -265,59 +267,21 @@ def upload():
     if not _parameters_filter([file_source]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
-    # 如果上传成功，则进行更新对应的数据来源，如user头像
-    user = session.get("user")
+    # 保存图片文件到服务器
     file = request.files['file']
     file_name = create_token() + "." + file.filename.split(".")[1]
-    if _upload_files(file, file_name) == 1:
-        # 图片来源为用户头像，更新用户用户头像url
-        if file_source == "userHeadImage":
-            update_user_header_sql = "update tbl_user set headImage='%s' where id=%s" % (file_name, user.get("id"))
-            if excute(update_user_header_sql): # 插入成功,就更新user信息
-                _set_user_session(query("select * from tbl_user where id=%s" % user.get("id")))
-                return json(get_json(data=user))
-
-        # 文章header信息更新和参数校验
-        article_id = request.form.get("articleId")
-        type = request.form.get("type")
-        if not _parameters_filter([article_id, type]):
-            return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
-
-        """修改图片
-        """
-        datas = {}
-        if file_source == "articleHeadImage" and type == "update":
-            article = query("select * from tbl_article where id=%d") % article_id
-            if len(article) == 0:
-                return json(get_json(code=-100, msg="操作失败，未找到该文章!"))
-            # 获取img_id
-            img_id = article[0].get("imgId")
-
-            # 执行级联操作，先更新imgsource表，然后再更新article表
-            update_img_source_sql = "update tbl_image_sources set path='%s' where id=%d" % (file_name, img_id)
-            update_article_header_sql = "update tbl_article set imgId=%d where id=%s" % (img_id, article_id)
-            if excutemany([update_img_source_sql, update_article_header_sql]):
-                query_article_sql = "select * from tbl_article where id=%d" % article_id
-                datas["article"] = query(query_article_sql)
-
-                return json(get_json(data=datas))
-
-        """
-            新增文章图片,返回图片id和path给前端
-        """
-        if file_source == "articleHeadImage" and type == "add":
-            # 插入imgSources表
-            insert_img_source_sql = "INSERT INTO tbl_image_sources values(NULL, '%s', 1, '%s', NULL)" % (file_name, get_current_time())
-            if not excute(insert_img_source_sql):
-                return json(get_json(code=-100, msg="上传失败，请联系snake!"))
-
-            # 查询结果并返回
-            query_img_source_sql = "select * from tbl_image_sources where path='%s'" % file_name
-            datas["imageInfo"] = query(query_img_source_sql)[0]
-
+    if _upload_files(file, file_name):
+        # 执行插入数据库操作
+        insert_img_source_sql = "INSERT INTO tbl_image_sources " \
+                                "values(NULL, '%s', 1, '%s', NULL)" % (file_name, get_current_time())
+        # 执行成功返回该img信息
+        if excute(insert_img_source_sql):
+            query_img_sql = "select * from tbl_image_sources where path='%s'" % file_name
+            datas = {"imgInfo":query(query_img_sql)}
             return json(get_json(data=datas))
 
     return json(get_json(code=-100, msg="操作失败!"))
+
 
 
 @bp.route("/articleDatiles/", methods=["POST"])
@@ -389,7 +353,7 @@ def article_comment():
     # 增加文章评论
     insert_aritcle_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, NULL)" % (user_id, article_id, comment_content, get_current_time())
     if excute(insert_aritcle_comment_sql):
-        return json(get_json())
+        return json(get_json(msg="添加文章成功!"))
 
     return json(get_json(code=-100, msg="操作失败!"))
 
@@ -418,7 +382,8 @@ def reply_comment():
     if excute(insert_reply_comment_sql):
         return json(get_json())
 
-    return json(get_json(code=-100, msg="操作失败!"))
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
+
 
 
 @bp.route("/articleCollect/", methods=["POST"])
@@ -449,9 +414,9 @@ def article_collect():
     # 增加文章收藏记录
     insert_article_collect_sql = "insert into tbl_article_collect values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
     if excute(insert_article_collect_sql):
-        return json(get_json())
+        return json(get_json(msg="收藏文章成功!"))
 
-    return json(get_json(code=-100, msg="操作失败!"))
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
 
 @bp.route("/articleLike/", methods=["POST"])
@@ -486,9 +451,9 @@ def article_like():
     else:
         update_article_collect_sql = "insert into tbl_article_like values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
     if excute(update_article_collect_sql):
-        return json(get_json())
+        return json(get_json(msg="文章点赞成功!"))
 
-    return json(get_json(code=-100, msg="操作失败!"))
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
 
 @bp.route("/cancelArticleCollent/", methods=["POST"])
@@ -505,7 +470,7 @@ def cancel_article_collent():
     if not _parameters_filter([article_id]):
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
-    # 检查是否已经赞过了
+    # 检查是否已经收藏过了
     user_id = session.get("user").get("id")
     query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if not query(query_article_collect_detail):
@@ -518,9 +483,9 @@ def cancel_article_collent():
     else:
         update_article_collect_sql = "update tbl_article_collect as a set a.status=0 where userId=%d and articleId=%d" % (user_id, article_id)
     if excute(update_article_collect_sql):
-        return json(get_json())
+        return json(get_json(msg="成功取消收藏此文章!"))
 
-    return json(get_json(code=-100, msg="操作失败!"))
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
 
 @bp.route("/cancelArticleLike/", methods=["POST"])
@@ -546,12 +511,10 @@ def cancel_article_like():
     # 修改状态
     update_article_like_sql = "update tbl_article_like as a set a.status=0 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if excute(update_article_like_sql):
-        return json(get_json())
+        return json(get_json(msg="成功取消此文章的点赞!"))
 
-    return json(get_json(code=-100, msg="操作失败!"))
+    return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
-# todo
-# 各个页面入口接口
 
 @bp.route("/codeStatus/", methods=["post", "get"])
 def get_code_status():
