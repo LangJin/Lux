@@ -496,7 +496,6 @@ def query_conditions_users():
     else:
         if _admin_parameters_filter([end_date]):
             conditions_sql += "and createDate < '%s'" % end_date
-    print(conditions_sql)
     datas = {"articles": query(conditions_sql)}
     return json(get_json(data=datas))
 
