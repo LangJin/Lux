@@ -3,17 +3,18 @@ Navicat MySQL Data Transfer
 
 Source Server         : 本机
 Source Server Version : 50721
-Source Host           : localhost:3306
+Source Host           : 127.0.0.1:3306
 Source Database       : lux
 
 Target Server Type    : MYSQL
 Target Server Version : 50721
 File Encoding         : 65001
 
-Date: 2018-03-30 21:34:35
+Date: 2018-04-04 15:34:34
 */
 
 SET FOREIGN_KEY_CHECKS=0;
+
 
 DROP DATABASE IF EXISTS lux;
 CREATE DATABASE lux DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -40,7 +41,7 @@ CREATE TABLE `tbl_admin` (
 -- ----------------------------
 -- Records of tbl_admin
 -- ----------------------------
-INSERT INTO `tbl_admin` VALUES ('1', 'admin1', 'admin1', '1', 'ry8sp0w9-t6q2-wi9z-3fon-tubr9olmerpd', '1', '2018-03-29 15:41:03', null);
+INSERT INTO `tbl_admin` VALUES ('1', 'admin1', 'admin1', '1', '827thvvn-wftw-u9es-fix0-76zudgqggdlb', '1', '2018-03-29 15:41:03', null);
 
 -- ----------------------------
 -- Table structure for tbl_announcement
@@ -52,12 +53,26 @@ CREATE TABLE `tbl_announcement` (
   `status` int(11) NOT NULL COMMENT '状态',
   `userId` varchar(255) NOT NULL COMMENT '发布人id',
   `createDate` datetime NOT NULL COMMENT '创建时间',
+  `title` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Records of tbl_announcement
 -- ----------------------------
+INSERT INTO `tbl_announcement` VALUES ('1', '测试12', '0', '1', '2018-04-02 14:33:54', '测试12');
+INSERT INTO `tbl_announcement` VALUES ('2', '测试公告2', '1', '1', '2018-04-02 14:34:08', '关于xxx论坛上线公告2');
+INSERT INTO `tbl_announcement` VALUES ('3', '测试公告3', '1', '1', '2018-04-02 14:41:12', '关于xxx论坛上线公告3');
+INSERT INTO `tbl_announcement` VALUES ('4', '测试公告4', '1', '1', '2018-04-02 14:41:25', '关于xxx论坛上线公告4');
+INSERT INTO `tbl_announcement` VALUES ('5', '测试公告5', '1', '1', '2018-04-02 14:41:36', '关于xxx论坛上线公告5');
+INSERT INTO `tbl_announcement` VALUES ('6', '测试公告6', '1', '1', '2018-04-02 14:41:44', '关于xxx论坛上线公告6');
+INSERT INTO `tbl_announcement` VALUES ('7', '测试公告7', '1', '1', '2018-04-02 14:41:50', '关于xxx论坛上线公告7');
+INSERT INTO `tbl_announcement` VALUES ('8', '测试公告8', '1', '1', '2018-04-02 14:41:59', '关于xxx论坛上线公告8');
+INSERT INTO `tbl_announcement` VALUES ('9', '测试公告9', '1', '1', '2018-04-02 14:42:05', '关于xxx论坛上线公告9');
+INSERT INTO `tbl_announcement` VALUES ('10', '测试公告10', '1', '1', '2018-04-02 14:42:15', '关于xxx论坛上线公告10');
+INSERT INTO `tbl_announcement` VALUES ('11', '测试公告11', '1', '1', '2018-04-02 14:42:32', '关于xxx论坛上线公告11');
+INSERT INTO `tbl_announcement` VALUES ('12', '测试12', '1', '1', '2018-04-02 15:38:42', '测试12');
+INSERT INTO `tbl_announcement` VALUES ('13', '测试', '1', '1', '2018-04-04 15:29:44', '测试');
 
 -- ----------------------------
 -- Table structure for tbl_article
@@ -77,12 +92,12 @@ CREATE TABLE `tbl_article` (
   `createDate` datetime DEFAULT NULL COMMENT '创建时间',
   `updateDate` datetime DEFAULT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Records of tbl_article
 -- ----------------------------
-INSERT INTO `tbl_article` VALUES ('1', '测试1', '333', '1', '测试1', '测试1', '2', '1', '1', '1', '2018-03-24 23:59:52', '2018-03-30 11:37:29');
+INSERT INTO `tbl_article` VALUES ('1', 'title_test', '1', '1', 'test_test', '1', '5', '1', '1', '1', '2018-03-24 23:59:52', '2018-04-04 15:29:02');
 INSERT INTO `tbl_article` VALUES ('2', '测试2', '333', '1', '测试2', '测试2', '2', '1', '1', '1', '2018-03-26 22:42:14', '2018-03-30 11:34:07');
 INSERT INTO `tbl_article` VALUES ('3', '测试3', '333', '1', '测试3', '测试3', '1', '1', '1', '1', '2018-03-29 16:24:20', null);
 INSERT INTO `tbl_article` VALUES ('4', '测试4', '333', '1', '测试4', '测试4', '1', '1', '1', '1', '2018-03-29 17:24:20', null);
@@ -109,6 +124,8 @@ INSERT INTO `tbl_article` VALUES ('24', '测试24', '333', '1', '测试24', '测
 INSERT INTO `tbl_article` VALUES ('25', '测试25', '333', '1', '测试25', '测试25', '1', '1', '1', '1', '2018-03-29 17:24:20', null);
 INSERT INTO `tbl_article` VALUES ('26', '测试26', '333', '1', '测试26', '测试26', '1', '1', '1', '1', '2018-03-29 17:24:20', null);
 INSERT INTO `tbl_article` VALUES ('27', '测试27', '333', '1', '测试27', '测试27', '1', '1', '1', '1', '2018-03-29 17:24:20', null);
+INSERT INTO `tbl_article` VALUES ('30', 'title', '1', '2', 'test', '123', '0', '0', '1', '1', '2018-04-04 15:28:09', null);
+INSERT INTO `tbl_article` VALUES ('31', 'title', '1', '2', 'test', '123', '0', '0', '1', '1', '2018-04-04 15:29:00', null);
 
 -- ----------------------------
 -- Table structure for tbl_article_browsing_history
@@ -122,15 +139,16 @@ CREATE TABLE `tbl_article_browsing_history` (
   `createDate` datetime DEFAULT NULL COMMENT '创建时间',
   `updateDate` datetime DEFAULT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Records of tbl_article_browsing_history
 -- ----------------------------
-INSERT INTO `tbl_article_browsing_history` VALUES ('1', '1', '2', '1', '2018-03-29 16:20:02', '2018-03-30 11:37:29');
-INSERT INTO `tbl_article_browsing_history` VALUES ('2', '-1', '1', '1', '2018-03-30 09:56:12', '2018-03-30 11:37:29');
-INSERT INTO `tbl_article_browsing_history` VALUES ('3', '1', '1', '1', '2018-03-30 11:11:55', '2018-03-30 11:37:29');
-INSERT INTO `tbl_article_browsing_history` VALUES ('4', '-1', '2', '1', '2018-03-30 11:22:50', '2018-03-30 11:37:29');
+INSERT INTO `tbl_article_browsing_history` VALUES ('1', '1', '2', '1', '2018-03-29 16:20:02', '2018-04-04 15:27:37');
+INSERT INTO `tbl_article_browsing_history` VALUES ('2', '-1', '1', '1', '2018-03-30 09:56:12', '2018-04-04 15:27:37');
+INSERT INTO `tbl_article_browsing_history` VALUES ('3', '1', '1', '1', '2018-03-30 11:11:55', '2018-04-04 15:27:37');
+INSERT INTO `tbl_article_browsing_history` VALUES ('4', '-1', '2', '1', '2018-03-30 11:22:50', '2018-04-04 15:27:37');
+INSERT INTO `tbl_article_browsing_history` VALUES ('5', '2', '1', '1', '2018-04-02 10:35:47', '2018-04-04 15:27:37');
 
 -- ----------------------------
 -- Table structure for tbl_article_collect
@@ -165,7 +183,7 @@ CREATE TABLE `tbl_article_comment` (
   `updateDate` datetime DEFAULT NULL COMMENT '修改时间',
   `fid` int(11) DEFAULT NULL COMMENT '当前评论的父评论id，即回复某个评论的评论id',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Records of tbl_article_comment
@@ -177,6 +195,8 @@ INSERT INTO `tbl_article_comment` VALUES ('4', '1', '1', '评论id为3的回复�
 INSERT INTO `tbl_article_comment` VALUES ('5', '1', '2', 'test', '1', '2018-03-30 11:19:16', null, null);
 INSERT INTO `tbl_article_comment` VALUES ('6', '1', '2', 'tes11111t', '1', '2018-03-30 11:25:28', null, null);
 INSERT INTO `tbl_article_comment` VALUES ('9', '1', '2', 'reply comment 5111', '1', '2018-03-30 11:33:57', null, '5');
+INSERT INTO `tbl_article_comment` VALUES ('10', '1', '2', 'tes11111t', '1', '2018-04-04 15:27:39', null, null);
+INSERT INTO `tbl_article_comment` VALUES ('11', '1', '2', 'reply comment 5111', '1', '2018-04-04 15:27:42', null, '5');
 
 -- ----------------------------
 -- Table structure for tbl_article_like
@@ -199,6 +219,41 @@ INSERT INTO `tbl_article_like` VALUES ('1', '1', '2', '0', '2018-03-30 11:39:02'
 INSERT INTO `tbl_article_like` VALUES ('2', '1', '1', '1', '2018-03-30 11:39:24', null);
 
 -- ----------------------------
+-- Table structure for tbl_carouse
+-- ----------------------------
+DROP TABLE IF EXISTS `tbl_carouse`;
+CREATE TABLE `tbl_carouse` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` int(11) NOT NULL COMMENT '0：url内容；1：文章类型内容',
+  `imgId` int(11) NOT NULL COMMENT '图片id',
+  `status` int(11) NOT NULL COMMENT '0：无效；1：有效',
+  `content` varchar(255) DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `createDate` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Records of tbl_carouse
+-- ----------------------------
+INSERT INTO `tbl_carouse` VALUES ('1', '1', '1', '0', '123', '', '2018-04-03 22:59:55');
+INSERT INTO `tbl_carouse` VALUES ('2', '0', '1', '2', '测试测试', '', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('3', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('4', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('5', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('6', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('7', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('8', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('9', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('10', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('11', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('12', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('13', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('14', '1', '1', '1', null, 'http://www.baidu.com/', '2018-04-03 23:14:43');
+INSERT INTO `tbl_carouse` VALUES ('20', '0', '1', '1', '', 'http://www.google.com/', '2018-04-03 23:51:56');
+INSERT INTO `tbl_carouse` VALUES ('21', '0', '1', '1', '', 'http://www.google.com/', '2018-04-04 15:29:56');
+
+-- ----------------------------
 -- Table structure for tbl_image_sources
 -- ----------------------------
 DROP TABLE IF EXISTS `tbl_image_sources`;
@@ -209,13 +264,14 @@ CREATE TABLE `tbl_image_sources` (
   `createDate` datetime DEFAULT NULL COMMENT '创建时间',
   `updateDate` datetime DEFAULT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Records of tbl_image_sources
 -- ----------------------------
 INSERT INTO `tbl_image_sources` VALUES ('1', 'e205xsh4-5wk5-1v26-yrks-eeaaxs2b2ap5.png', '1', '2018-03-30 17:41:33', null);
 INSERT INTO `tbl_image_sources` VALUES ('2', 'oi51ymvi-kqe0-uajr-54kc-hruqbbuhqof0.jpg', '1', '2018-03-30 17:42:16', null);
+INSERT INTO `tbl_image_sources` VALUES ('3', 'x8yq1imy-1gf0-k8k8-lp5e-szvthxnww3bl.png', '1', '2018-04-04 15:25:20', null);
 
 -- ----------------------------
 -- Table structure for tbl_user
@@ -235,7 +291,7 @@ CREATE TABLE `tbl_user` (
   `cellphone` varchar(255) DEFAULT NULL COMMENT '手机号',
   `address` varchar(255) DEFAULT NULL COMMENT '地址',
   `wechat` varchar(255) DEFAULT NULL COMMENT '微信',
-  `headImage` varchar(255) DEFAULT NULL COMMENT '头像',
+  `imgId` int(11) DEFAULT NULL COMMENT '头像id',
   `remark` varchar(255) DEFAULT NULL COMMENT '备注',
   `createDate` datetime NOT NULL COMMENT '创建时间',
   `updateDate` datetime DEFAULT NULL COMMENT '修改时间',
@@ -245,9 +301,4 @@ CREATE TABLE `tbl_user` (
 -- ----------------------------
 -- Records of tbl_user
 -- ----------------------------
-INSERT INTO `tbl_user` VALUES ('1', 'user', 'user', 'snake', '1', 'signature', '男', 'education', '24', 'test@qq.com', '15000000000', 'test', 'snake', '', 'greate full!', '2018-03-24 23:38:48', '2018-03-30 11:11:16');
-INSERT INTO `tbl_user` VALUES ('2', 'user1', 'user1', 'None', '1', '', '', '', null, '', '', '', '', '', '', '2018-03-26 23:09:03', null);
-INSERT INTO `tbl_user` VALUES ('3', 'user2', 'user2', 'None', '1', '', '', '', null, '', '', '', '', '', '', '2018-03-26 23:10:55', null);
-INSERT INTO `tbl_user` VALUES ('4', 'user3', 'user3', 'None', '1', '', '', '', null, '', '', '', '', '', '', '2018-03-26 15:15:46', null);
-INSERT INTO `tbl_user` VALUES ('5', 'user3', 'user3', 'None', '1', '', '', '', null, '', '', '', '', '', '', '2018-03-27 00:54:30', null);
-INSERT INTO `tbl_user` VALUES ('6', 'user33', '123', 'user33', '1', '', '', '', null, '', '', '', '', '', '', '2018-03-30 11:10:03', null);
+INSERT INTO `tbl_user` VALUES ('1', 'test', 'test', 'snake', '1', 'signature', '男', 'education', '22', 'test@qq.com', '15000000000', 'test', 'snake', '1', 'greate full!', '2018-04-04 14:41:54', '2018-04-04 15:29:18');
