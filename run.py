@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-__author__ = 'lux'
+__author__ = 'snake'
 from app import create_app
 from app.resources import users, admin
 

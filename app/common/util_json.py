@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-__author__ = 'lux'
+__author__ = 'snake'
 
 
 def get_json(code=200, msg="操作成功!", data={}):
