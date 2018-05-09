@@ -3,11 +3,11 @@ __author__ = 'snake'
 
 from app import bp
 from functools import wraps
-from app.common import util_db as db
-from app.common.util_json import get_json
-from flask import jsonify as json, request, redirect, url_for, session, render_template
-from app.common.util_db import query, excute, excutemany
-from app.common.util_date import get_current_time, create_token
+from app.utils.util_json import get_json
+from flask import jsonify as json, request, session, render_template
+from app.utils.util_db import query, excute
+from app.utils.util_date import get_current_time
+from app.utils.util_token import create_token
 import os, config, traceback
 
 
@@ -28,6 +28,19 @@ def _set_user_session(user):
     """
     session.clear()
     session["user"] = user
+    session["user_token"] = user.get("token")
+
+def _get_user_session():
+    """
+    返回不包含password和token的user信息
+    :return: user
+    """
+    from copy import copy
+    user = copy(session.get("user"))
+    user.pop("token", None)
+    user.pop("password", None)
+
+    return {"userInfo": user}
 
 
 def _user_permission_required(func):
@@ -38,17 +51,17 @@ def _user_permission_required(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if session.get("user"):
+        token = request.get_json().get("token")
+        if token is not None and token != ""\
+                and token == session.get("user_token"):
             try:
                 return func(*args, **kwargs)
-            except :
+            except:
                 print(traceback.print_exc())
                 return json(get_json(code=500, msg="内部错误,请检查参数是否正确!"))
         return json(get_json(code=-300, msg="权限错误,请先登录!"))
 
     return wrapper
-
-
 
 
 def _upload_files(file, file_name):
@@ -99,10 +112,12 @@ def index():
                              "from tbl_carouse as a JOIN tbl_image_sources as b " \
                              "where a.imgId=b.id and b.status=1 and a.status=1;"
 
-    datas["articles"] = articles
-    datas["annos"] = query(query_anno_sql)
-    datas["carouses"] = query(query_all_carouses_sql)
-    datas["userInfo"] = session.get("user")
+    datas = {
+        "articles":articles,
+        "annos":query(query_anno_sql),
+        "carouses":query(query_all_carouses_sql),
+        "userInfo": session.get("user")
+    }
 
     return json(get_json(data=datas))
 
@@ -128,11 +143,20 @@ def user_login():
         query_login_sql = "select * from tbl_user where username='%s' and password='%s'" % (username, password)
         result = query(query_login_sql)
         if result:
-            if  result[0].get("status") == 1:
+            if result[0].get("status") == 1:
+                # 生成并插入token
+                user_token = create_token()
+                insert_token_sql = "update tbl_user set token='%s' where id=%d" % (user_token, result[0]["id"])
+                excute(insert_token_sql)
+
+                # 查询IMG并更新Token
                 query_img_sql = "select * from tbl_image_sources where id=%d" % result[0].get("imgId")
                 result[0]["img"] = query(query_img_sql)[0].get("path")
+                result[0]["token"] = user_token
+
+                # 保存用户信息
                 _set_user_session(result[0])
-                return json(get_json(msg="登录成功!"))
+                return json(get_json(data={"token": user_token}, msg="登录成功!"))
             else:
                 return json(get_json(msg="登录失败, 您已经禁止登陆网站, 请联系管理员处理!"))
 
@@ -162,55 +186,74 @@ def user_regist():
         return json(get_json(code=-300, msg="用户名已存在!"))
 
     # 没被占用，进行注册
-    user_reg_sql = "insert into tbl_user values(NULL, '%s', '%s', '%s',1,'','','',NULL,'','','','','','','%s',NULL)" % (
-        username, password, nickname, create_date)
+    user_reg_sql = "insert into tbl_user values(NULL, '%s', '%s', '%s'," \
+                   "NULL, 1,'','','',NULL,'','','','',NULL,'','%s',NULL)" % (username, password, nickname, create_date)
     if excute(user_reg_sql):
         return json(get_json(msg="注册成功!"))
 
     return json(get_json(code=-100, msg="注册失败，用户名可能已经存在了!"))
 
 
-@bp.route("/userLogout/")
+@bp.route("/userLogout/", methods=["post"])
 @_user_permission_required
 def user_logout():
     """
     用户退出，删除session
+    :arg {"token":"xxxxx"}
     :return:
     """
     session.pop("user", None)
+    session.pop("user_token", None)
     return json(get_json())
 
 
-@bp.route("/userIndex/")
+@bp.route("/userIndex/", methods=["POST"])
 @_user_permission_required
 def user_index():
     """
+    :params {"token":"pmqkp62j-n5pw-w882-zk3e-qh8722mivo4u"}
     获取用户个人中心信息,包括历史评论、收藏文章、浏览记录、个人资料
     :return: json
     """
-    user = session.get("user")
     # 历史浏览
-    query_comment_his_sql = "select * from tbl_article_comment as a join tbl_article as b where a.articleId=b.id and a.userId=%d and a.status=1 and b.status=1 limit 10" % user.get("id")
+    user = _get_user_session()["userInfo"]
+    query_comment_his_sql = "select * from tbl_article_comment as " \
+                            "a join tbl_article as b where a.articleId=b.id " \
+                            "and a.userId=%d and a.status=1 and b.status=1 limit 10" % user.get("id")
     # 收藏文章
-    query_collect_sql = "select a.* from tbl_article as a JOIN tbl_article_collect as b on a.id=b.articleId and b.userId=%s and a.status=1 and b.status=1 limit 10" % user.get("id")
+    query_collect_sql = "select a.* from tbl_article as a JOIN " \
+                        "tbl_article_collect as b on a.id=b.articleId " \
+                        "and b.userId=%s and a.status=1 and b.status=1 " \
+                        "limit 10" % user.get("id")
     # 浏览记录
-    query_browsing_his_sql = "select a.* from tbl_article as a JOIN tbl_article_browsing_history as b on a.id=b.articleId and b.userId=%d and a.status=1 and b.status=1 limit 10" % user.get("id")
+    query_browsing_his_sql = "select a.* from tbl_article as a JOIN " \
+                             "tbl_article_browsing_history as b on a.id=b.articleId " \
+                             "and b.userId=%d and a.status=1 and b.status=1 limit 10" % user.get("id")
     # 个人喜欢
-    query_like_sql = "select a.* from tbl_article as a JOIN tbl_article_like as b on a.id=b.articleId and b.userId=%d and a.status = 1 and b.status=1 limit 10" % user.get("id")
+    query_like_sql = "select a.* from tbl_article as a JOIN " \
+                     "tbl_article_like as b on a.id=b.articleId " \
+                     "and b.userId=%d and a.status = 1 and b.status=1 limit 10" % user.get("id")
 
     # 构造响应数据
-    datas = {"user_info":user, "likes":query(query_like_sql), "comments": query(query_comment_his_sql), "collects":query(query_collect_sql), "browsing":query(query_browsing_his_sql)}
+    datas = {
+         "userInfo": _get_user_session().get("userInfo"),
+         "likes": query(query_like_sql),
+         "comments": query(query_comment_his_sql),
+         "collects": query(query_collect_sql),
+         "browsing": query(query_browsing_his_sql)
+    }
     return json(get_json(data=datas))
 
 
-@bp.route("/userInfoPage/")
+@bp.route("/userInfoPage/", methods=["post"])
 @_user_permission_required
 def user_info_page():
     """
     进入页面时请求此接口
+    :params {"token":"pmqkp62j-n5pw-w882-zk3e-qh8722mivo4u"}
     :return: json
     """
-    return json(get_json(data=session.get("user")))
+    return json(get_json(data=_get_user_session()))
 
 
 @bp.route("/updateUserInfo/", methods=["POST"])
@@ -218,15 +261,19 @@ def user_info_page():
 def update_user_info():
     """
     编辑用户信息
-    :arg {"sex":"男","imgId":1, "age":22, "email":"test@qq.com", "wechat":"snake", "remark":"greate full!", "address":"test", "nickname":"snake", "signature":"signature", "cellphone":"15000000000", "education":"education"}
+    :arg {
+        "sex":"男","imgId":1, "age":22, "email":"test@qq.com", "wechat":"snake", "remark":"greate full!",
+        "address":"test", "nickname":"snake", "signature":"signature", "cellphone":"15000000000",
+        "education":"education","token":"pmqkp62j-n5pw-w882-zk3e-qh8722mivo4u"
+    }
     :return: json
     """
     user_info = request.get_json()
     sex = user_info.get("sex")
-    id = session.get("user").get("id")
-    img_id = user_info.get("imgId")
     age = user_info.get("age")
+    token = user_info.get("token")
     email = user_info.get("email")
+    img_id = user_info.get("imgId")
     wechat = user_info.get("wechat")
     remark = user_info.get("remark")
     address = user_info.get("address")
@@ -236,16 +283,20 @@ def update_user_info():
     education = user_info.get("education")
     updateDate = get_current_time()
 
+
     # 执行用户信息更新
     update_user_sql = "update tbl_user set nickname='%s', imgId=%d, sex='%s'," \
                       "age=%d, email='%s', wechat='%s',remark='%s',address='%s'," \
-                      "nickname='%s',signature='%s',cellphone='%s',education='%s',updateDate='%s' where id='%s'" % \
-                      (nickname, img_id, sex, age, email, wechat, remark, address, nickname, signature, cellphone, education, updateDate, id)
+                      "nickname='%s',signature='%s',cellphone='%s',education='%s',updateDate='%s' where token='%s'" % \
+                      (nickname, img_id, sex, age, email, wechat, remark, address, nickname, signature, cellphone,
+                       education, updateDate, token)
     # 更新成功则重置session并返回最新的用户信息
     if excute(update_user_sql):
-        user = query("select * from tbl_user where id=%s" % id)[0]
+        user = query("select * from tbl_user where token='%s'" % token)[0]
         _set_user_session(user)
-        return json(get_json(msg="修改成功", data={"userInfo": session.get("user")}))
+
+        # 返回用户信息
+        return json(get_json(msg="修改成功", data=_get_user_session()))
 
     return json(get_json(code=-100, msg="修改失败!"))
 
@@ -277,11 +328,10 @@ def upload():
         # 执行成功返回该img信息
         if excute(insert_img_source_sql):
             query_img_sql = "select * from tbl_image_sources where path='%s'" % file_name
-            datas = {"imgInfo":query(query_img_sql)}
+            datas = {"imgInfo": query(query_img_sql)}
             return json(get_json(data=datas))
 
     return json(get_json(code=-100, msg="操作失败!"))
-
 
 
 @bp.route("/articleDatiles/", methods=["POST"])
@@ -307,12 +357,14 @@ def article_detailes():
     # 首先默认请求此接口为浏览了该文章
     try:
         # 增加浏览数量，如果没有浏览，则增加一条浏览数据，否则修改浏览时间
-        query_article_sql = "select * from tbl_article_browsing_history as a where a.userId=%d and a.articleId=%d and a.status=1" %  (user_id, article_id)
+        query_article_sql = "select * from tbl_article_browsing_history " \
+                            "as a where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
         if query(query_article_sql):
             article_browsing_sql = "update tbl_article_browsing_history set updateDate='%s'" % get_current_time()
             excute(article_browsing_sql)
         else:
-            article_browsing_sql = "INSERT INTO tbl_article_browsing_history VALUES (NULL, %d, %d, 1, '%s',NULL)" % (user_id, article_id, get_current_time())
+            article_browsing_sql = "INSERT INTO tbl_article_browsing_history " \
+                                   "VALUES (NULL, %d, %d, 1, '%s',NULL)" % (user_id, article_id, get_current_time())
             excute(article_browsing_sql)
 
         # 查询article阅读总数
@@ -320,7 +372,8 @@ def article_detailes():
         read_counts = query(query_article_readcount_sql)[0].get("readCount") + 1
 
         # 更新readCount总数
-        update_article_browsing_count = "update tbl_article set readCount=%d, updateDate='%s' where id=%d" % (read_counts, get_current_time(), article_id)
+        update_article_browsing_count = "update tbl_article set readCount=%d, " \
+                                        "updateDate='%s' where id=%d" % (read_counts, get_current_time(), article_id)
         excute(update_article_browsing_count)
     except Exception as e:
         print(e)
@@ -329,7 +382,10 @@ def article_detailes():
     # 查询文章和对应的评论
     query_article_sql = "select * from tbl_article where id=%s and status=1" % article_id
     query_comments_sql = "select * from tbl_article_comment where articleId=%s and status=1" % article_id
-    results = {"article": query(query_article_sql), "comments": query(query_comments_sql)}
+    results = {
+        "article": query(query_article_sql),
+        "comments": query(query_comments_sql)
+    }
 
     return json(get_json(data=results))
 
@@ -339,7 +395,7 @@ def article_detailes():
 def article_comment():
     """
     文章评论
-    :arg {"articleId":1, "content":"test"}
+    :arg {"articleId":1, "content":"test", "token": "xx13v9wp-t4gl-gsxn-mnd6-ftnhx6gnp3r0"}
     :return: json
     """
     comments_info = request.get_json()
@@ -351,9 +407,11 @@ def article_comment():
         return json(get_json(code=-200, msg="参数存在空值，请检查参数!"))
 
     # 增加文章评论
-    insert_aritcle_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, NULL)" % (user_id, article_id, comment_content, get_current_time())
+    insert_aritcle_comment_sql = "insert into tbl_article_comment values" \
+                                 "(NULL, %d, %d, '%s', 1, '%s', NULL, NULL)" % \
+                                 (user_id, article_id, comment_content, get_current_time())
     if excute(insert_aritcle_comment_sql):
-        return json(get_json(msg="添加文章成功!"))
+        return json(get_json(msg="评论成功!"))
 
     return json(get_json(code=-100, msg="操作失败!"))
 
@@ -363,7 +421,7 @@ def article_comment():
 def reply_comment():
     """
     回复评论
-    :arg {"articleId":1, "commentId":5, "commentContent":"test"}
+    :arg {"articleId":1, "commentId":5, "commentContent":"test","token": "xx13v9wp-t4gl-gsxn-mnd6-ftnhx6gnp3r0"}
     :return: json
     """
     comments_info = request.get_json()
@@ -378,12 +436,13 @@ def reply_comment():
 
     # 增加文章评论
     user_id = session.get("user").get("id")
-    insert_reply_comment_sql = "insert into tbl_article_comment values(NULL, %d, %d, '%s', 1, '%s', NULL, %d)" % (user_id, article_id, comment_content, get_current_time(), comment_id)
+    insert_reply_comment_sql = "insert into tbl_article_comment values" \
+                               "(NULL, %d, %d, '%s', 1, '%s', NULL, %d)" % \
+                               (user_id, article_id, comment_content, get_current_time(), comment_id)
     if excute(insert_reply_comment_sql):
         return json(get_json())
 
     return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
-
 
 
 @bp.route("/articleCollect/", methods=["POST"])
@@ -391,7 +450,7 @@ def reply_comment():
 def article_collect():
     """
     收藏文章
-    :arg {"articleId":1}
+    :arg {"articleId":1,"token": "xx13v9wp-t4gl-gsxn-mnd6-ftnhx6gnp3r0"}
     :return: json
     """
     article_info = request.get_json()
@@ -402,7 +461,8 @@ def article_collect():
 
     # 检查是否已经收藏过文章
     user_id = session.get("user").get("id")
-    query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
+    query_article_collect_detail = "select * from tbl_article_collect as a " \
+                                   "where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if query(query_article_collect_detail):
         return json(get_json(code=-100, msg="您已经收藏过此文章了!"))
 
@@ -412,7 +472,8 @@ def article_collect():
         return json(get_json(code=-100, msg="文章不在了...!"))
 
     # 增加文章收藏记录
-    insert_article_collect_sql = "insert into tbl_article_collect values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
+    insert_article_collect_sql = "insert into tbl_article_collect " \
+                                 "values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
     if excute(insert_article_collect_sql):
         return json(get_json(msg="收藏文章成功!"))
 
@@ -424,7 +485,7 @@ def article_collect():
 def article_like():
     """
     文章点赞
-    :arg {"articleId":1}
+    :arg {"articleId":1,"token": "xx13v9wp-t4gl-gsxn-mnd6-ftnhx6gnp3r0"}
     :return: json
     """
     article_info = request.get_json()
@@ -435,7 +496,8 @@ def article_like():
 
     # 检查是否已经赞过了
     user_id = session.get("user").get("id")
-    query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
+    query_article_like_detail = "select * from tbl_article_like as a  " \
+                                "where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if query(query_article_like_detail):
         return json(get_json(code=-100, msg="您已经赞过了此文章!"))
 
@@ -445,11 +507,14 @@ def article_like():
         return json(get_json(code=-100, msg="文章不在了...!"))
 
     # 如果存在记录则修改时间，如果没有记录则增加记录
-    query_article_like_detail = "select * from tbl_article_like as a  where a.userId=%d and a.articleId=%d" % (user_id, article_id)
+    query_article_like_detail = "select * from tbl_article_like as a  where " \
+                                "a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if query(query_article_like_detail):
-        update_article_collect_sql = "update tbl_article_like as a set a.status=1 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
+        update_article_collect_sql = "update tbl_article_like as a " \
+                                     "set a.status=1 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     else:
-        update_article_collect_sql = "insert into tbl_article_like values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
+        update_article_collect_sql = "insert into tbl_article_like " \
+                                     "values(NULL, %d, %d, 1, '%s', NULL )" % (user_id, article_id, get_current_time())
     if excute(update_article_collect_sql):
         return json(get_json(msg="文章点赞成功!"))
 
@@ -461,7 +526,7 @@ def article_like():
 def cancel_article_collent():
     """
     取消文章关注
-    :arg {"articleId":1}
+    :arg {"articleId":1,"token": "xx13v9wp-t4gl-gsxn-mnd6-ftnhx6gnp3r0"}
     :return:
     """
     article_info = request.get_json()
@@ -472,16 +537,20 @@ def cancel_article_collent():
 
     # 检查是否已经收藏过了
     user_id = session.get("user").get("id")
-    query_article_collect_detail = "select * from tbl_article_collect as a where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
+    query_article_collect_detail = "select * from tbl_article_collect as a " \
+                                   "where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if not query(query_article_collect_detail):
         return json(get_json(code=-100, msg="您还没有收藏此文章!"))
 
     # 修改状态，如果存在记录就修改，没有就增加
-    query_article_like_detail = "select * from tbl_article_collect as a  where a.userId=%d and a.articleId=%d" % (user_id, article_id)
+    query_article_like_detail = "select * from tbl_article_collect as a" \
+                                " where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if query(query_article_like_detail):
-        update_article_collect_sql = "update tbl_article_collect as a set a.status=1 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
+        update_article_collect_sql = "update tbl_article_collect as a set a.status=1 " \
+                                     "where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     else:
-        update_article_collect_sql = "update tbl_article_collect as a set a.status=0 where userId=%d and articleId=%d" % (user_id, article_id)
+        update_article_collect_sql = "update tbl_article_collect as a set a.status=0 " \
+                                     "where userId=%d and articleId=%d" % (user_id, article_id)
     if excute(update_article_collect_sql):
         return json(get_json(msg="成功取消收藏此文章!"))
 
@@ -493,7 +562,7 @@ def cancel_article_collent():
 def cancel_article_like():
     """
     取消文章点赞
-    :arg {"articleId":1}
+    :arg {"articleId":1,"token": "xx13v9wp-t4gl-gsxn-mnd6-ftnhx6gnp3r0"}
     :return:
     """
     article_info = request.get_json()
@@ -504,12 +573,14 @@ def cancel_article_like():
 
     # 检查是否已经赞过了
     user_id = session.get("user").get("id")
-    query_article_like_detail = "select * from tbl_article_like as a where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
+    query_article_like_detail = "select * from tbl_article_like as a " \
+                                "where a.userId=%d and a.articleId=%d and a.status=1" % (user_id, article_id)
     if not query(query_article_like_detail):
         return json(get_json(code=-100, msg="您还没有赞过此文章!"))
 
     # 修改状态
-    update_article_like_sql = "update tbl_article_like as a set a.status=0 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
+    update_article_like_sql = "update tbl_article_like as a set " \
+                              "a.status=0 where a.userId=%d and a.articleId=%d" % (user_id, article_id)
     if excute(update_article_like_sql):
         return json(get_json(msg="成功取消此文章的点赞!"))
 
@@ -518,5 +589,6 @@ def cancel_article_like():
 
 @bp.route("/codeStatus/", methods=["post", "get"])
 def get_code_status():
-    datas = {"code:-100":"操作失败", "code:-200":"参数错误", "code:-300":"权限出错,需要登录", "code:200":"操作成功", "code:500":"内部异常，通常都是参数传错了"}
+    datas = {"code:-100": "操作失败", "code:-200": "参数错误", "code:-300": "权限出错,需要登录", "code:200": "操作成功",
+             "code:500": "内部异常，通常都是参数传错了"}
     return json(get_json(msg="状态码说明", data=datas))

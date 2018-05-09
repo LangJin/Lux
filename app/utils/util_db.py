@@ -3,7 +3,7 @@ __author__ = 'snake'
 
 import pymysql.cursors
 import config as cf
-from app.common.util_date import decode_result_date
+from app.utils.util_date import decode_result_date
 
 
 def query(sql=""):

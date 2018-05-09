@@ -4,22 +4,22 @@ __author__ = 'snake'
 import os
 
 
-class Config:
-    DEBUG = False
+# 开发环境
+class DevelopConfig:
+    DEBUG = True
     HOST = "0.0.0.0"
     JSON_AS_ASCII = False #json 中文支持
     BABEL_DEFAULT_LOCALE = 'zh'
     SECRET_KEY = os.urandom(24)    # SESSION配置
 
 
-# 开发环境
-class DevelopConfig(Config):
-    DEBUG = True
-
-
 # 线上发布环境
-class ProductionConfig(Config):
-    pass
+class ProductionConfig:
+    DEBUG = False
+    HOST = "0.0.0.0"
+    JSON_AS_ASCII = False #json 中文支持
+    BABEL_DEFAULT_LOCALE = 'zh'
+    SECRET_KEY = os.urandom(24)    # SESSION配置
 
 
 flask_config = {

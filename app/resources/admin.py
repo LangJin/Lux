@@ -3,10 +3,11 @@ __author__ = "snake"
 
 from app import bp
 from functools import wraps
-from flask import jsonify as json, request, flash, session
-from app.common.util_db import query, excute
-from app.common.util_date import create_token, get_current_time
-from app.common.util_json import get_json
+from flask import jsonify as json, request, session
+from app.utils.util_db import query, excute
+from app.utils.util_date import get_current_time
+from app.utils.util_token import create_token
+from app.utils.util_json import get_json
 
 import math, traceback
 
@@ -17,10 +18,11 @@ def _admin_permission_required(func):
     :param func:
     :return: json
     """
-
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if session.get("admin"):
+        token = request.get_json().get("token")
+        if token is not None and token != ""\
+                and token == session.get("admin_token"):
             try:
                 return func(*args, **kwargs)
             except:
@@ -45,10 +47,17 @@ def _admin_parameters_filter(paras):
 
 def _get_admin_session():
     """
-    获取admin的session，内容为admin的数据库信息
-    :return: session
+    返回不包含password和token的user信息和token信息
+    :return: {"adminInfo":{}, "token":"Xxx"}
     """
-    return session.get("admin")
+
+    from copy import copy
+    admin = copy(session.get("admin"))
+    admin.pop("token", None)
+    admin.pop("password", None)
+
+    return {"adminInfo": admin}
+
 
 
 def _set_admin_session(admin):
@@ -59,6 +68,7 @@ def _set_admin_session(admin):
     """
     session.clear()
     session["admin"] = admin
+    session["admin_token"] = admin.get("token")
 
 
 def _get_page(total, p):
@@ -107,7 +117,7 @@ def adminlogin():
         result = query("SELECT * FROM tbl_admin where username = '%s' and password = '%s';" % (username, password))
         if result:
             token = create_token()
-            session['token'] = token
+            result[0]["token"] = token
             _set_admin_session(result[0])
             excute("UPDATE `tbl_admin` SET `token`='%s' WHERE (`id`='%d') LIMIT 1" % (token, result[0].get("id")))
             response = {}
@@ -134,6 +144,7 @@ def logout():
     # 如果会话中有用户名就删除它。
     # 同时从客户端浏览器中删除 session的 name属性
     session.pop('token', None)
+    session.pop('admin', None)
     response = {}
     response["code"] = 200
     response["data"] = 1
@@ -141,25 +152,29 @@ def logout():
     return json(response)
 
 
-@bp.route("/adminIndex/")
+@bp.route("/adminIndex/", methods=["post"])
 @_admin_permission_required
 def admin_index():
     """
     管理员首页
+    :args {"token":"xxx}
     :return:
     """
-    return json(get_json(data={"admin_info": _get_admin_session()}))
+    return json(get_json(data=_get_admin_session()))
 
 
-@bp.route("/queryAllArticles/")
+@bp.route("/queryAllArticles/", methods=["post"])
 @_admin_permission_required
 def query_all_articles():
     """
     查询所有文章
+    :args {"token": "hq1bjvcc-o4ub-dwlv-1uok-lhmixq5lvkl3"}
     :return: json
     """
     query_articles_sql = "select * from tbl_article order by createDate desc"
-    datas = {"articles": query(query_articles_sql)}
+    datas = {
+        "articles": query(query_articles_sql)
+    }
     return json(get_json(data=datas))
 
 
@@ -168,7 +183,7 @@ def query_all_articles():
 def query_paging_articles():
     """
     文章分页查询
-    :arg {"page":1}
+    :arg {"page":1,"token": "lup5gvda-5vwa-q3yp-kub5-sz69v6qxtgr3"}
     :return: json
     详细格式如下，此接口受前端限制，可能会更改
     {
@@ -232,7 +247,12 @@ def query_paging_articles():
 def query_conditions_articles():
     """
     多条件联合查询文章
-    :arg {"title":"测试","status":1, "source":"测试", "startDate":"2017-03-23 23:59:52", "endDate":"2018-03-28 23:59:52"}
+    :arg :
+    {
+    "title":"测试","status":1, "source":"测试",
+    "startDate":"2017-03-23 23:59:52", "endDate":"2018-03-28 23:59:52",
+    "token": "x8txta6o-rbmx-sc43-6hc4-u0prik5s8yay"
+    }
     :return: json
     """
     # 文章title查询、状态查询、来源、创建时间范围查询
@@ -263,7 +283,9 @@ def query_conditions_articles():
         if _admin_parameters_filter([end_date]):
             conditions_sql += "and createDate < '%s'" % end_date
 
-    datas = {"articles": query(conditions_sql)}
+    datas = {
+        "articles": query(conditions_sql)
+    }
     return json(get_json(data=datas))
 
 
@@ -272,7 +294,10 @@ def query_conditions_articles():
 def add_article():
     """
     新增文章
-    :arg {"title":"title", "imgId":1, "type":2, "content":"test", "source":"123"}
+    :arg
+    {
+    "title":"title", "imgId":1,"type":2, "content":"test", "source":"123","token": "6gax71xs-z38o-8178-3a2t-6c3jjcm2cn18"
+    }
     :return: json
     """
     article_info = request.get_json()
@@ -281,15 +306,16 @@ def add_article():
     img_id = article_info.get("imgId")
     source = article_info.get("source")
     content = article_info.get("content")
-    user_id = _get_admin_session().get("id")
+    user_id = _get_admin_session()["adminInfo"]["id"]
 
     # 参数校验
     if not _admin_parameters_filter([title, img_id, type, content, source]):
         return json(get_json(code=-200, msg="操作失败，参数有误!"))
 
     # 插入文章记录
-    insert_article_sql = "INSERT INTO tbl_article VALUES(NULL, '%s', %d, %d, '%s', '%s', 0, 0, 1, %d, '%s', NULL)" % (
-        title, img_id, type, content, source, user_id, get_current_time())
+    insert_article_sql = "INSERT INTO tbl_article VALUES" \
+                         "(NULL, '%s', %d, %d, '%s', '%s', 0, 0, 1, %d, '%s', NULL)" % \
+                         (title, img_id, type, content, source, user_id, get_current_time())
     if excute(insert_article_sql):
         return json(get_json())
 
@@ -301,7 +327,12 @@ def add_article():
 def update_article():
     """
     更新文章
-    :arg {"id":1, "type":1, "title":"title_test", "source":"1", "status":1, "content":"test_test", "imgId":1}
+    :arg
+    {
+        "id":1, "type":1, "title":"title_test",
+        "source":"1", "status":1, "content":"test_test",
+        "imgId":1,"token": "75wglrvu-uiol-ifza-73c9-d9vu4e5sql0m"
+    }
     :return:
     """
     article_info = request.get_json()
@@ -332,7 +363,7 @@ def update_article():
 def delete_article():
     """
     删除文章(软删除)
-    :arg {"id":1}
+    :arg {"id":1, "token":"dd0tl9ek-v65c-un69-v450-vdjxweucf0f7"}
     :return:
     """
     article_info = request.get_json()
@@ -355,7 +386,7 @@ def delete_article():
 def active_article():
     """
     激活已删除的文章
-    :arg {"id":1}
+    :arg {"id":1, "token":"dd0tl9ek-v65c-un69-v450-vdjxweucf0f7"}}
     :return:
     """
     article_info = request.get_json()
@@ -373,11 +404,12 @@ def active_article():
     return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
 
-@bp.route("/queryAllUsers/")
+@bp.route("/queryAllUsers/", methods=["post"])
 @_admin_permission_required
 def query_all_users():
     """
     查询所有用户
+    :args {"token": "ol5r2k0p-0fn0-kbyd-1xpe-zq4n6sgk5wa5"}
     :return: json
     """
     query_users_sql = "select * from tbl_user"
@@ -390,7 +422,7 @@ def query_all_users():
 def query_paging_users():
     """
     用户分页查询
-    :arg {"page":1}
+    :arg {"page":2,"token": "te4uzdia-gkee-ziiy-5cjg-zz8qji20z7a6"}
     :return: json
     详细格式如下，此接口受前端限制，可能会更改
     {
@@ -439,7 +471,7 @@ def query_paging_users():
     dic = _get_page(total, current_page)
 
     datas = {
-        "userss": user_list,
+        "users": user_list,
         "currentPage": int(current_page),
         'total': total,
         'showIndexStatus': show_shouye_status,
@@ -454,7 +486,13 @@ def query_paging_users():
 def query_conditions_users():
     """
     多条件联合查询用户
-    :arg {"username":"user1","nickname":"user, "status":1, "sex":"男", "email":"test@qq.com", "phone_num":"15000000000", "wechat":1, "startDate":"2017-03-23 23:59:52", "endDate":"2018-03-28 23:59:52"}
+    :arg
+    {
+        "username":"user1","nickname":"user, "status":1, "sex":"男",
+        "email":"test@qq.com", "phone_num":"15000000000", "wechat":1,
+        "startDate":"2017-03-23 23:59:52", "endDate":"2018-03-28 23:59:52",
+        "token": "te4uzdia-gkee-ziiy-5cjg-zz8qji20z7a6"
+    }
     :return: json
     """
     # 文章title查询、状态查询、来源、创建时间范围查询
@@ -496,7 +534,7 @@ def query_conditions_users():
     else:
         if _admin_parameters_filter([end_date]):
             conditions_sql += "and createDate < '%s'" % end_date
-    datas = {"articles": query(conditions_sql)}
+    datas = {"users": query(conditions_sql)}
     return json(get_json(data=datas))
 
 
@@ -505,7 +543,7 @@ def query_conditions_users():
 def add_user():
     """
     新增用户
-    :arg {"username":"user", "password":"123", "nickname":"nickname"}
+    :arg {"username":"user", "password":"123", "nickname":"nickname", "token": "4cmhr7a8-t0zw-sskr-3e5i-o9sdxv48878p"}
     :return: json
     """
     user_info = request.get_json()
@@ -524,12 +562,14 @@ def add_user():
         return json(get_json(code=-300, msg="用户名已存在!"))
 
     # 没被占用，进行注册
-    user_reg_sql = "insert into tbl_user values(NULL, '%s', '%s', '%s',1,'','','',NULL,'','','','','','','%s',NULL)" % (
-        username, password, nickname, create_date)
+    user_reg_sql = "insert into tbl_user values" \
+                   "(NULL, '%s', '%s', '%s',NULL,1,'','','',NULL,'','','','',NULL,'','%s',NULL)" \
+                   % (username, password, nickname, create_date)
+    print(user_reg_sql)
     if excute(user_reg_sql):
         return json(get_json(msg="新增用户成功!"))
 
-    return json(get_json(code=-100, msg="新增用户失败，用户名可能已经存在了!"))
+    return json(get_json(code=-100, msg="新增用户失败!"))
 
 
 @bp.route("/updateUser/", methods=["POST"])
@@ -537,7 +577,14 @@ def add_user():
 def update_user():
     """
     编辑用户信息
-    :arg {"id":1, "status":1, "sex":"男", "age":22, "email":"test@qq.com", "wechat":"snake", "remark":"greate full!", "address":"test", "nickname":"snake", "signature":"signature", "cellphone":"15000000000", "education":"education"}
+    :arg {
+    "id":1, "status":1, "sex":"男",
+    "age":22, "email":"test@qq.com",
+    "wechat":"snake", "remark":"greate full!",
+    "address":"test", "nickname":"snake",
+    "signature":"signature", "cellphone":"15000000000",
+    "education":"education","token": "4cmhr7a8-t0zw-sskr-3e5i-o9sdxv48878p"
+    }
     :return: json
     """
     user_info = request.get_json()
@@ -556,8 +603,13 @@ def update_user():
     updateDate = get_current_time()
 
     # 执行用户信息更新
-    update_user_sql = "update tbl_user set nickname='%s',sex='%s',age=%d, email='%s', wechat='%s',remark='%s',address='%s',nickname='%s',signature='%s',cellphone='%s',education='%s',updateDate='%s',status=%d where id='%s'" % (
-        nickname, sex, age, email, wechat, remark, address, nickname, signature, cellphone, education, updateDate,
+    update_user_sql = "update tbl_user set nickname='%s'," \
+                      "sex='%s',age=%d, email='%s', wechat='%s'," \
+                      "remark='%s',address='%s',nickname='%s'," \
+                      "signature='%s',cellphone='%s',education='%s'," \
+                      "updateDate='%s',status=%d where id='%s'" % \
+                      (nickname, sex, age, email, wechat, remark, address, \
+                       nickname, signature, cellphone, education, updateDate,
         status, id)
     # 更新成功则重置session并返回最新的用户信息
     if excute(update_user_sql):
@@ -571,7 +623,7 @@ def update_user():
 def defriend_user():
     """
     拉黑用户
-    :arg {"id":1}
+    :arg {"id":1,"token": "2fvblixe-mxqg-weu5-mvqo-48ick796k009"}
     :return:
     """
     user_info = request.get_json()
@@ -594,7 +646,7 @@ def defriend_user():
 def recover_user():
     """
     恢复用户
-    :arg {"id":1}
+    :arg {"id":1,"token": "2fvblixe-mxqg-weu5-mvqo-48ick796k009"}
     :return:
     """
     user_info = request.get_json()
@@ -607,16 +659,17 @@ def recover_user():
     # 更新文章
     update_article_sql = "update tbl_user set status=1 where id=%d" % id
     if excute(update_article_sql):
-        return json(get_json(msg="恢复成功, 该用户被禁止登陆网站!"))
+        return json(get_json(msg="恢复成功, 该用户可以登陆网站!"))
 
     return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
 
-@bp.route("/queryAllUserComments/")
+@bp.route("/queryAllUserComments/", methods=["post"])
 @_admin_permission_required
 def query_all_user_comments():
     """
     查询所有用户文章及评论
+    :arg {"token": "2fvblixe-mxqg-weu5-mvqo-48ick796k009"}
     :return: cId,cUserId ... = comment表中的数据，重命名comments表是为了防止查询的字段冲突不显示
     """
     query_all_user_comments_sql = "select b.*," \
@@ -728,7 +781,7 @@ def query_conditions_comments():
 def defriend_comment():
     """
     禁止显示文章的评论
-    :arg {"id": 1}
+    :arg {"id": 1, "token":"3dfvjaj0-81hp-gwzl-wub9-2qsllamg2mou"}
     :return: json
     """
     comment_info = request.get_json()
@@ -751,7 +804,7 @@ def defriend_comment():
 def recover_comment():
     """
     恢复显示文章的评论
-    :arg {"id": 1}
+    :arg {"id": 1, "token":"3dfvjaj0-81hp-gwzl-wub9-2qsllamg2mou"}
     :return: json
     """
     comment_info = request.get_json()
@@ -769,11 +822,12 @@ def recover_comment():
     return json(get_json(code=-100, msg="操作失败，请检查数据库链接!"))
 
 
-@bp.route("/queryAllAnnos/")
+@bp.route("/queryAllAnnos/",methods=["post"])
 @_admin_permission_required
 def query_all_announcements():
     """
-    查询所有跑马灯公告
+    查询所有跑马灯公告:
+    arg {"token": "qzh84z4m-vsl7-ltkq-6xzq-wur2tkts2ppw"}
     :return: json
     """
     query_all_anno_sql = "select a.*, " \
@@ -835,7 +889,11 @@ def query_paging_annos():
 def query_conditions_annos():
     """
     多条件联合查询公告
-    :arg {"title":"公告", "status":1, "username":"admin1", "startDate":"2017-03-23 23:59:52", "endDate":"2018-04-28 23:59:52"}
+    :arg {
+        "token": "qzh84z4m-vsl7-ltkq-6xzq-wur2tkts2ppw",
+        "title":"公告", "status":1, "username":"admin1",
+        "startDate":"2017-03-23 23:59:52", "endDate":"2018-04-28 23:59:52"
+    }
     :return: json
     """
     # 公告标题 状态 开始时间 结束时间
@@ -876,7 +934,7 @@ def query_conditions_annos():
 def add_anno():
     """
     增加公告
-    :arg {"title":"测试", "content":"测试", "status":1}
+    :arg {"title":"测试", "content":"测试", "status":1,"token": "qzh84z4m-vsl7-ltkq-6xzq-wur2tkts2ppw"}
     :return:
     """
     anno_info = request.get_json()
@@ -884,7 +942,7 @@ def add_anno():
     content = anno_info.get("content")
     status = anno_info.get("status")
     create_date = get_current_time()
-    admin_id = _get_admin_session().get("id")
+    admin_id = _get_admin_session()["adminInfo"]["id"]
 
     # 参数校验
     if not _admin_parameters_filter([title, content, status]):
@@ -904,7 +962,7 @@ def add_anno():
 def update_anno():
     """
     修改公告
-    :arg {"id":1, "title":"测试", "content":"测试", "status":1}
+    :arg {"id":1, "title":"测试", "content":"测试", "status":1,"token": "qzh84z4m-vsl7-ltkq-6xzq-wur2tkts2ppw"}
     :return:
     """
     anno_info = request.get_json()
@@ -918,7 +976,8 @@ def update_anno():
         return json(get_json(code=-200, msg="操作失败，参数有误!"))
 
     # 构造sql并执行
-    insert_anno_sql = "update tbl_announcement set title='%s', content='%s', status=%d where id=%d" % (title, content, status, id)
+    insert_anno_sql = "update tbl_announcement " \
+                      "set title='%s', content='%s', status=%d where id=%d" % (title, content, status, id)
     if excute(insert_anno_sql):
         return json(get_json(msg="修改成功!"))
 
@@ -930,7 +989,7 @@ def update_anno():
 def delete_anno():
     """
     删除公告:软删除
-    :arg {"id":1}
+    :arg {"id":1,"token": "qzh84z4m-vsl7-ltkq-6xzq-wur2tkts2ppw"}
     :return:
     """
     anno_info = request.get_json()
@@ -948,9 +1007,13 @@ def delete_anno():
     return json(get_json(code=-100, msg="删除失败，请检查数据库链接!"))
 
 
-@bp.route("/queryAllCarouses/")
+@bp.route("/queryAllCarouses/", methods=["post"])
 @_admin_permission_required
 def query_all_carouses():
+    """
+    :arg {"token": "qzh84z4m-vsl7-ltkq-6xzq-wur2tkts2ppw"}
+    :return:
+    """
     query_all_carouses_sql = "select a.*, b.path as imgPath " \
                              "from tbl_carouse as a JOIN tbl_image_sources as b " \
                              "where a.imgId=b.id;"
@@ -963,7 +1026,7 @@ def query_all_carouses():
 def query_paging_carouses():
     """
     轮播图分页查询
-    :arg {"page":1}
+    :arg {"page":1,"token": "mz3ofz13-rgph-sbi9-gg8t-xiemoczr0i9s"}
     :return: json
     详细格式如上述接口
     """
@@ -985,7 +1048,8 @@ def query_paging_carouses():
     carouses_list = query(sql)
 
     # 查询总记录和计算总页数
-    sql = "select a.*, b.path as imgPath from tbl_carouse as a JOIN tbl_image_sources as b where a.imgId=b.id"
+    sql = "select a.*, b.path as imgPath from tbl_carouse " \
+          "as a JOIN tbl_image_sources as b where a.imgId=b.id"
     count = len(query(sql))  # 总记录
     total = int(math.ceil(count / 10.0))  # 总页数
 
@@ -1007,7 +1071,11 @@ def query_paging_carouses():
 def query_conditions_carouses():
     """
     多条件联合查询轮播图
-    :arg {"type":1, "status":1, "startDate":"2017-03-23 23:59:52", "endDate":"2018-04-28 23:59:52"}
+    :arg
+    {
+        "type":1, "status":1, "startDate":"2017-03-23 23:59:52",
+        "endDate":"2018-04-28 23:59:52","token": "zwoqgqod-c392-ingy-6cyl-stvk7nadyrpe"
+    }
     :return: json
     """
     # 公告标题 状态 开始时间 结束时间
@@ -1018,7 +1086,8 @@ def query_conditions_carouses():
     start_date = conditions.get("startDate")  # 开始时间
 
     # 开始构造查询语句，分别根据参数是否为空来构造sql语句
-    conditions_sql = "select a.*, b.path as imgPath from tbl_carouse as a JOIN tbl_image_sources as b where a.imgId=b.id "
+    conditions_sql = "select a.*, b.path as imgPath from tbl_carouse" \
+                     " as a JOIN tbl_image_sources as b where a.imgId=b.id "
     if _admin_parameters_filter([type]):
         conditions_sql += "and a.type=%d " % type
     if _admin_parameters_filter([status]):
@@ -1044,8 +1113,8 @@ def query_conditions_carouses():
 def add_carouse():
     """
     增加轮播图
-    :arg {"type":0, "imgId":1,"status":1,"content":"", "url":"http://www.google.com/"}
-    :arg {"type":1, "imgId":1,"status":1,"content":"123", "url":""}
+    :arg {"type":0, "imgId":1,"status":1,"content":"", "url":"http://www.google.com/", "token": "zwoqgqod-c392-ingy-6cyl-stvk7nadyrpe"}
+    :arg {"type":1, "imgId":1,"status":1,"content":"123", "url":"","token": "zwoqgqod-c392-ingy-6cyl-stvk7nadyrpe"}
     :return: json
     """
     carouse_info = request.get_json()
@@ -1078,8 +1147,8 @@ def add_carouse():
 def update_carouse():
     """
     修改轮播图
-    :arg {"id":1, "type":0, "imgId":1,"status":1,"content":"", "url":"http://www.google.com/"}
-    :arg {"id":1, "type":1, "imgId":1,"status":1,"content":"123", "url":""}
+    :arg {"id":1, "type":0, "imgId":1,"status":1,"content":"", "url":"http://www.google.com/","token": "zwoqgqod-c392-ingy-6cyl-stvk7nadyrpe"}
+    :arg {"id":1, "type":1, "imgId":1,"status":1,"content":"123", "url":"","token": "zwoqgqod-c392-ingy-6cyl-stvk7nadyrpe"}
     :return:
     """
     carouse_info = request.get_json()
@@ -1112,7 +1181,7 @@ def update_carouse():
 def delete_carouse():
     """
     删除轮播图
-    :arg {"id":1}
+    :arg {"id":1, "token": "zwoqgqod-c392-ingy-6cyl-stvk7nadyrpe"}
     :return:
     """
     carouse_info = request.get_json()

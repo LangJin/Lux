@@ -1,5 +1,2 @@
 # -*- coding:utf-8 -*-
-__author__ = 'lux'
-
-
-
+__author__ = 'snake'
