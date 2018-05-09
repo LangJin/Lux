@@ -48,7 +48,7 @@ def _admin_parameters_filter(paras):
 def _get_admin_session():
     """
     返回不包含password和token的user信息和token信息
-    :return: {"adminInfo":{}, "token":"Xxx"}
+    :return: {"adminInfo":{}}
     """
 
     from copy import copy

@@ -33,7 +33,7 @@ def _set_user_session(user):
 def _get_user_session():
     """
     返回不包含password和token的user信息
-    :return: user
+    :return: {"userInfo":{}}
     """
     from copy import copy
     user = copy(session.get("user"))
@@ -113,9 +113,9 @@ def index():
                              "where a.imgId=b.id and b.status=1 and a.status=1;"
 
     datas = {
-        "articles":articles,
-        "annos":query(query_anno_sql),
-        "carouses":query(query_all_carouses_sql),
+        "articles": articles,
+        "annos": query(query_anno_sql),
+        "carouses": query(query_all_carouses_sql),
         "userInfo": session.get("user")
     }
 
