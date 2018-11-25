@@ -150,8 +150,11 @@ def user_login():
                 excute(insert_token_sql)
 
                 # 查询IMG并更新Token
-                query_img_sql = "select * from tbl_image_sources where id=%d" % result[0].get("imgId")
-                result[0]["img"] = query(query_img_sql)[0].get("path")
+                try:
+                    query_img_sql = "select * from tbl_image_sources where id=%d" % result[0].get("imgId")
+                    result[0]["img"] = query(query_img_sql)[0].get("path")
+                except:
+                    result[0]["img"] = ""
                 result[0]["token"] = user_token
 
                 # 保存用户信息
