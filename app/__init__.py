@@ -1,15 +1,14 @@
 # -*- coding:utf-8 -*-
 __author__ = 'snake'
+from config import FlaskConfig
 from flask import Flask, Blueprint
-from config import flask_config
 
 bp = Blueprint("bp", __name__)
 
 
-def create_app(config_name="DevelopConfig"):
+def create_app(config_name="ProductionConfig"):
     app = Flask(__name__)
-    app.config.from_object(flask_config[config_name])
-    # 注册蓝本
-    app.register_blueprint(bp)
+    app.config.update(FlaskConfig[config_name])
+    app.register_blueprint(bp)  # 注册蓝本
 
     return app
