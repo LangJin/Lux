@@ -37,6 +37,3 @@ db_config = {
     'charset': 'utf8mb4'
 }
 
-upload_config = {
-    "UPLOAD_FOLDER":"C:\\Users\\SNake\\PycharmProjects\\Lux\\app\\static\\uploads"
-}
