@@ -4,7 +4,7 @@ from app import create_app
 from app.resources import users, admin
 
 
-app = create_app("ProductionConfig")
+app = create_app("DevelopConfig")
 
 if __name__ == "__main__":
     app.run()
