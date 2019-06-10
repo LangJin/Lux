@@ -37,3 +37,7 @@ db_config = {
     'charset': 'utf8mb4'
 }
 
+keys = {
+    "user":"sb250",
+    "admin":"god666"
+}
