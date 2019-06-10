@@ -1,10 +1,11 @@
 # -*- coding:utf-8 -*-
-__author__ = 'snake'
+__author__ = 'LangJin'
 from app import create_app
 
 
 
-app = create_app("DevelopConfig")
+app = create_app("Develop")
+
 
 if __name__ == "__main__":
     app.run()

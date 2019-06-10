@@ -11,8 +11,7 @@ DevelopConfig = {
     "JSON_AS_ASCII": False,  # 接口返回的json支持中文
     "BABEL_DEFAULT_LOCALE": "zh",
     "SECRET_KEY": os.urandom(24),  # SESSION配置
-    "WTF_CSRF_ENABLED" = False,    # 禁止跨域保护
-    "THREADED": True
+    "THREADED": True  # 开启多线程
 }
 
 ProductionConfig = {
