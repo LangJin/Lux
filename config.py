@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-__author__ = 'snake'
+__author__ = 'LangJin'
 
 import os
 
@@ -8,24 +8,25 @@ import os
 DevelopConfig = {
     "DEBUG": True,
     "HOST": "0.0.0.0",
-    "JSON_AS_ASCII": False,  # json 中文支持
+    "JSON_AS_ASCII": False,  # 接口返回的json支持中文
     "BABEL_DEFAULT_LOCALE": "zh",
     "SECRET_KEY": os.urandom(24),  # SESSION配置
+    "WTF_CSRF_ENABLED" = False,    # 禁止跨域保护
     "THREADED": True
 }
 
 ProductionConfig = {
     "DEBUG": False,
     "HOST": "0.0.0.0",
-    "JSON_AS_ASCII": False,  # json 中文支持
+    "JSON_AS_ASCII": False,  # 接口返回的json支持中文
     "BABEL_DEFAULT_LOCALE": "zh",
     "SECRET_KEY": os.urandom(24),  # SESSION配置
     "THREADED":True
 }
 
-FlaskConfig = {
-    "DevelopConfig": DevelopConfig,
-    "ProductionConfig": ProductionConfig
+config = {
+    "Develop": DevelopConfig,
+    "Production": ProductionConfig
 }
 
 db_config = {
