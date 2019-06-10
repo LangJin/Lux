@@ -1,3 +1,6 @@
+# -*- coding:utf-8 -*-
+__author__ = 'LangJin'
+
 from flask import jsonify,session,request
 from . import userbp
 from ..utils.mysqltools import query,commit
