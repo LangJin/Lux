@@ -1,3 +1,8 @@
 .info{
     bottom:30%;
 }
+/* 让轮播图显示屏幕的100%大小 */
+.carousel-inner img {
+    width: 100%;
+    height: 100%;
+}
