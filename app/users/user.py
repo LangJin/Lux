@@ -7,7 +7,7 @@ from ..utils.mysqltools import query,commit
 from ..utils.othertools import create_token,encryption
 
 
-@userbp.route("/login",methods=["post"])
+@userbp.route("/user/login",methods=["post"])
 def userlogin():
     '''
     用户登录接口\n
@@ -40,7 +40,7 @@ def userlogin():
     return jsonify(data)
 
 
-@userbp.route("/regist",methods=["post"])
+@userbp.route("/user/regist",methods=["post"])
 def regist():
     '''
     用户注册接口\n

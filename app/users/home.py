@@ -18,6 +18,6 @@ def index():
     return render_template('index.html')
 
 
-@userbp.route("/home/login")
+@userbp.route("/login")
 def getloginhtml():
     return render_template('login.html')

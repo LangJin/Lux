@@ -21,6 +21,21 @@ function getbigimg() {
 }
 
 
+
+function login(){
+    $.ajax(
+    {
+        type:"post",
+        dataType:"json",
+        url:"/user/login",
+        success:function(data){
+            alert(data)
+        }
+    }
+)
+
+}
+
 // 局部刷新的方式
 // function login(){
 //     $.ajax({
@@ -38,6 +53,6 @@ function getbigimg() {
 
 
 $("#login").on("click",()=>{
-    window.location = "/home/login";
+    window.location = "/login";
 })
 getbigimg();
