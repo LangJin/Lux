@@ -1,19 +1,22 @@
-a:visited {text-decoration:none ; }
-a:hover {text-decoration:none ; color:#35b558;}
-a:active {text-decoration:none ;}
+
+/************************** 导航条 **************************/
+
+
+/* 导航条nav > div > ul > li > a 初始状态的文字样式 */
+
+
+/************************** 轮播图 **************************/
 
 /* 让轮播图显示屏幕的100%大小 */
 .info{
     bottom:30%;
 }
 
-/************************** 轮播图 **************************/
+/* 未知 */
 .carousel-inner img {
     width: 100%;
     height: 100%;
 }
-
-
 
 /************************** 知识体系 && 职业发展 **************************/
 
@@ -64,6 +67,11 @@ a:active {text-decoration:none ;}
     overflow: hidden;
     color: #999;
 }
+
+
+.zhishitixi a:visited {text-decoration:none ; }
+.zhishitixi a:hover {text-decoration:none ; color:#35b558;}
+.zhishitixi a:active {text-decoration:none ;}
 
 
 /************************** 职业发展 **************************/

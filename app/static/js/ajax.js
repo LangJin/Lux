@@ -52,7 +52,44 @@ function login(){
 
 
 
+// 修改js时,必须加上此方法和对应的调用方法
+// 首先执行init_navbar()
+// 然后执行navbar_swipe()
+// 把渲染效果放在最前面执行
+
+// 初始化导航条样式 - >透明状态
+function init_navbar(){
+    $(".navbar").removeClass("bg-dark");
+    // $(".nav-link").css("color","#FFFFFF");
+    $(".nav-link").addClass("text-info"); 
+    $("#login").addClass("text-info"); 
+}
+
+// 滑动改变导航条样式
+function navbar_swipe(){
+        $(window).scroll(function () {  
+            // 不透明状态
+            if ($(".navbar").offset().top > 300) {
+                $(".navbar").addClass("bg-dark"); 
+                $(".nav-link").removeClass("text-info"); 
+                $("#login").removeClass("text-info"); 
+            
+            // 透明状态
+            }else {
+                $(".navbar").removeClass("bg-dark");
+                // $(".nav-link").css("color","FFFFFF");
+                $(".nav-link").addClass("text-info"); 
+                $("#login").addClass("text-info"); 
+            }  
+        });
+}
+
+
+
 $("#login").on("click",()=>{
     window.location = "/login";
 })
+
+init_navbar()
+navbar_swipe();
 getbigimg();
