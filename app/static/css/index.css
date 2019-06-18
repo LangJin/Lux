@@ -1,8 +1,126 @@
+a:visited {text-decoration:none ; }
+a:hover {text-decoration:none ; color:#35b558;}
+a:active {text-decoration:none ;}
+
+/* 让轮播图显示屏幕的100%大小 */
 .info{
     bottom:30%;
 }
-/* 让轮播图显示屏幕的100%大小 */
+
+/************************** 轮播图 **************************/
 .carousel-inner img {
     width: 100%;
     height: 100%;
+}
+
+
+
+/************************** 知识体系 && 职业发展 **************************/
+
+/* 知识体系 && 职业发展的大div */
+.content {
+    width: 1000px;
+    margin-top: 40px;
+}
+
+
+
+/************************** 职业发展 **************************/
+/* 知识体系的大div */
+.zhishitixi {
+    width: 1000px;
+    text-align:center;
+}
+
+/* 知识体系div > 第一个div */
+.zhishitixi_div1{
+    line-height: 60px;
+    height: 60px;
+    text-align: left;
+    font-size: 18px;
+    color: #333;
+}
+
+/* 知识体系div > 第二个div */
+.zhishitixi_div2 {
+    width: 1000px;
+    text-align:center;
+    /* margin-top: 10px; */
+}
+
+/* 知识体系div > 第二个div > a > h4 */
+.zhishitixi_div2_div_a_h4{
+    font-size: 16px;
+    color: #333;
+    line-height: 18px;
+    overflow: hidden;
+}
+
+/* 知识体系div > 第二个div > a > p */
+.zhishitixi_div2_div_a_p{
+    font-size: 12px;
+    line-height: 22px;
+    height: 22px;
+    overflow: hidden;
+    color: #999;
+}
+
+
+/************************** 职业发展 **************************/
+
+/* 职业发展的大div */
+.zhiyefazhan {
+    width: 1000px;
+    margin-top: 40px;
+}
+
+/* 职业发展div > 第一个div */
+.zhiyefazhan_div1{
+    line-height: 60px;
+    height: 50px;
+    text-align: left;
+    font-size: 18px;
+    color: #333;
+}
+
+/* 职业发展div > 第二个div */
+.zhiyefazhan_div2 {
+    width: 1000px;
+}
+
+/* 职业发展div > 第二个div > 第一个div > a */
+.zhiyefazhan_div2_div_a{
+    width: 168px; 
+    height:140px;
+    margin-top: 10px; 
+    text-align:center; 
+    text-decoration: none;
+}
+
+/* 职业发展div > 第二个div > 第一个div > a > 第一个img */
+.zhiyefazhan_div2_div_a_img1 {
+    display: inline-block;
+    width: 23px;
+    height: 11px;
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background-size: 23px 11px;
+}
+
+/* 职业发展div > 第二个div > 第一个div > a > 第二个img */
+.zhiyefazhan_div2_div_a_img2{
+    height: 86px;
+    width:140px; 
+    margin-left: 14px; 
+    margin-top:16px;
+}
+
+/* 职业发展div > 第二个div > 第一个div > a > 第一个span */
+.zhiyefazhan_div2_div_a_span{
+    color: #333;
+    font-size: 12px;
+    margin-top: 10px;
+    text-decoration: none;
 }
