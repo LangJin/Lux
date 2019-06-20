@@ -212,3 +212,38 @@ a:hover {text-decoration:underline ; color:white;}
     text-decoration: none;
 }
 
+/************************** 就业前景 **************************/
+
+/* 就业前景大div */
+.jiuyeqianjing {
+    width: 970px;
+    margin-top: 40px;
+}
+
+/* 就业前景标题 */
+.jiuyeqianjing_div1{
+    line-height: 60px;
+    height: 50px;
+    text-align: left;
+    font-size: 18px;
+    color: #333;
+}
+
+
+.jiuyeqianjing_div2{
+    width: 1000px;
+}
+
+/************************** 关于我们 **************************/
+.guanyuwomen{
+    width: 1000px;
+    margin-top: 40px;
+}
+
+.guanyuwomen_div1{
+    line-height: 60px;
+    height: 50px;
+    text-align: left;
+    font-size: 18px;
+    color: #333;
+}
