@@ -11,7 +11,7 @@ function getbigimg() {
         success: function(data){
             for(var i in data){
                 $("#demo ul").append('<li data-target="#demo" data-slide-to="'+i+'" class="'+(i == 0? "active" : "")+'"></li>');
-                $("#demo .carousel-inner").append('<div class="carousel-item '+(i == 0? "active" : "")+'"><img src="'+data[i].imgpath+'"><div class="info carousel-caption"><h1 class="display-2 font-weight-bold">"'+data[i].title+'"</h1><p>"'+data[i].content+'"</p></div>');    
+                $("#demo .carousel-inner").append('<div class="carousel-item '+(i == 0? "active" : "")+'"><img src="'+data[i].imgpath+'" style="height:650px;"><div class="info carousel-caption"><h1 class="display-2 font-weight-bold">"'+data[i].title+'"</h1><p>"'+data[i].content+'"</p></div>');    
             }
             
             $("#demo").append('<a class="carousel-control-prev" href="#demo" data-slide="prev"><span class="carousel-control-prev-icon"></span></a><a class="carousel-control-next" href="#demo" data-slide="next"><span class="carousel-control-next-icon"></span></a>');
@@ -59,10 +59,18 @@ function login(){
 
 // 初始化导航条样式 - >透明状态
 function init_navbar(){
-    $(".navbar").removeClass("bg-dark");
-    // $(".nav-link").css("color","#FFFFFF");
-    $(".nav-link").addClass("text-info"); 
-    $("#login").addClass("text-info"); 
+    if ($(".navbar").offset().top > 300) {
+        $(".navbar").addClass("bg-dark"); 
+        $(".nav-link").removeClass("text-info"); 
+        $("#login").removeClass("text-info"); 
+    
+    // 透明状态
+    }else {
+        $(".navbar").removeClass("bg-dark");
+        // $(".nav-link").css("color","FFFFFF");
+        $(".nav-link").addClass("text-info"); 
+        $("#login").addClass("text-info"); 
+    }  
 }
 
 // 滑动改变导航条样式
