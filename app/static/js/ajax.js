@@ -59,10 +59,18 @@ function login(){
 
 // 初始化导航条样式 - >透明状态
 function init_navbar(){
-    $(".navbar").removeClass("bg-dark");
-    // $(".nav-link").css("color","#FFFFFF");
-    $(".nav-link").addClass("text-info"); 
-    $("#login").addClass("text-info"); 
+    if ($(".navbar").offset().top > 300) {
+        $(".navbar").addClass("bg-dark"); 
+        $(".nav-link").removeClass("text-info"); 
+        $("#login").removeClass("text-info"); 
+    
+    // 透明状态
+    }else {
+        $(".navbar").removeClass("bg-dark");
+        // $(".nav-link").css("color","FFFFFF");
+        $(".nav-link").addClass("text-info"); 
+        $("#login").addClass("text-info"); 
+    }  
 }
 
 // 滑动改变导航条样式

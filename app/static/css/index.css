@@ -1,6 +1,13 @@
 
+
+/************************** 全局设定 **************************/
 /* 网页背景颜色 */
 .body{background:#F5F5F5}
+
+/* a标签去掉下划线 */
+a:hover {text-decoration:underline ; color:white;}
+
+
 
 /************************** 导航条 **************************/
 
@@ -29,7 +36,8 @@
     margin-top: 40px;
 }
 
-/************************** 职业发展 **************************/
+/************************** 知识发展 **************************/
+
 /* 知识体系的大div */
 .zhishitixi {
     width: 1000px;
@@ -52,6 +60,13 @@
     /* margin-top: 10px; */
 }
 
+
+.zhishitixi_div2_div_a{
+    border-radius:0;
+    text-decoration: none;
+    border: 0px solid transparent;
+}
+
 /* 知识体系div > 第二个div > a > h4 */
 .zhishitixi_div2_div_a_h4{
     font-size: 16px;
@@ -68,11 +83,6 @@
     overflow: hidden;
     color: #999;
 }
-
-
-.zhishitixi a:visited {text-decoration:none ; }
-.zhishitixi a:hover {text-decoration:none ; color:#35b558;}
-.zhishitixi a:active {text-decoration:none ;}
 
 
 /************************** 职业发展 **************************/
@@ -97,6 +107,11 @@
     width: 1000px;
 }
 
+/* 职业发展div > 第二个div阴影样式 */
+.zhiyefazhan_div2_div_a:hover {
+    box-shadow: 0 3px 6px rgba(0,0,0,.2);
+}
+
 /* 职业发展div > 第二个div > 第一个div > a */
 .zhiyefazhan_div2_div_a{
     width: 168px; 
@@ -104,6 +119,8 @@
     margin-top: 10px; 
     text-align:center; 
     text-decoration: none;
+    border-radius:0;
+    border: 0px solid transparent;
 }
 
 /* 职业发展div > 第二个div > 第一个div > a > 第一个img */
@@ -130,6 +147,68 @@
 .zhiyefazhan_div2_div_a_span{
     color: #333;
     font-size: 12px;
-    margin-top: 10px;
+    margin-top: 5px;
     text-decoration: none;
 }
+
+/************************** 学习课程 **************************/
+
+/* 学习课程的大div */
+.xuexikecheng {
+    width: 1000px;
+    margin-top: 40px;
+}
+
+/* 学习课程div > 第一个div */
+.xuexikecheng_div1{
+    line-height: 60px;
+    height: 50px;
+    text-align: left;
+    font-size: 18px;
+    color: #333;
+}
+/* 学习课程div > 第二个div */
+.xuexikecheng_div2 {
+    width: 1000px;
+}
+
+/* 学习课程div > 第二个div > 第一个div > a */
+
+.xuexikecheng_div2_div_a:hover {
+    box-shadow: 0 3px 6px rgba(0,0,0,.2);
+}
+
+/* 学习课程div > 第二个div > 第一个div > a */
+.xuexikecheng_div2_div_a{
+    width: 134px; 
+    height:120px; 
+    border-radius:0;
+    margin-top:10px;
+    text-align:center; 
+    text-decoration: none;
+    border: 0px solid transparent;
+}
+
+/* 学习课程div > 第二个div > 第一个div > a > img*/
+.xuexikecheng_div2_div_a_img{
+    width: 50px; 
+    margin: 10px 0px 0px 42px;
+}
+
+/* 学习课程div > 第二个div > 第一个div > a > span2 */
+.xuexikecheng_div2_div_a_span1{
+    color: #333;
+    font-size: 12px;
+    margin-top: 5px;
+    text-decoration: none;
+}
+
+/* 学习课程div > 第二个div > 第一个div > a > span2 */
+.xuexikecheng_div2_div_a_span2{
+    display: block;
+    font-size: 12px;
+    margin-top: 5px;
+    color: #35b558;
+    text-decoration: none;
+}
+
