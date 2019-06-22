@@ -5,14 +5,15 @@
 .body{background:#F5F5F5}
 
 /* a标签去掉下划线 */
-a:hover {text-decoration:underline ; color:white;}
-
-
+a:hover {text-decoration:none ; color:#35b558;}
 
 /************************** 导航条 **************************/
 
 
-/* 导航条nav > div > ul > li > a 初始状态的文字样式 */
+.logo_title{
+    font-size:16px;
+    
+}
 
 
 /************************** 轮播图 **************************/
@@ -60,7 +61,7 @@ a:hover {text-decoration:underline ; color:white;}
     /* margin-top: 10px; */
 }
 
-
+/* 知识体系的a标签 */
 .zhishitixi_div2_div_a{
     border-radius:0;
     text-decoration: none;
@@ -95,11 +96,21 @@ a:hover {text-decoration:underline ; color:white;}
 
 /* 职业发展div > 第一个div */
 .zhiyefazhan_div1{
-    line-height: 60px;
     height: 50px;
-    text-align: left;
-    font-size: 18px;
     color: #333;
+    font-size: 18px;
+    text-align: left;
+    line-height: 60px;
+    
+}
+
+/* 职业发展div > 第一个div > 更多职业发展 */
+.zhiyefazhan_div1_more{
+    float: right;
+    color: #333333;
+    font-size: 12px; 
+    padding-right: 30px;
+    display: inline-block; 
 }
 
 /* 职业发展div > 第二个div */
@@ -167,6 +178,16 @@ a:hover {text-decoration:underline ; color:white;}
     font-size: 18px;
     color: #333;
 }
+
+/* 职业发展div > 第一个div > 更多职业发展 */
+.xuexikecheng_div1_more{
+    float: right;
+    color: #333333;
+    font-size: 12px; 
+    padding-right: 30px;
+    display: inline-block; 
+}
+
 /* 学习课程div > 第二个div */
 .xuexikecheng_div2 {
     width: 1000px;
@@ -222,11 +243,97 @@ a:hover {text-decoration:underline ; color:white;}
 
 /* 就业前景标题 */
 .jiuyeqianjing_div1{
-    line-height: 60px;
     height: 50px;
-    text-align: left;
-    font-size: 18px;
     color: #333;
+    font-size: 18px;
+    text-align: left;
+    line-height: 60px;
+}
+
+/* 学员故事大div的父div */
+.jiuyeqianjing_div2{
+    width: 970px;
+    margin-top: 10px;
+}
+
+/* 每个学员故事的大div */
+.jiuyeqianjing_div2_div_div_div_div{
+    width: 300px;
+}
+
+/* 学员故事a标签 */
+.jiuyeqianjing_div2_div_div_div_div_card{
+    width: 300px;
+    border-radius:0;
+    border: 0px solid transparent;
+}
+
+/* 学员故事title */
+.jiuyeqianjing_div2_div_div_div_div_card_i{
+    top: 10px;
+    left: 50%;
+    color: #fff;
+    width: 60px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+    font-style: normal; 
+    margin-left: -30px;
+    position: absolute;
+    background: #f88;
+    text-align: center;
+    display: inline-block;
+
+}
+
+/* 学员感言内容 */
+.jiuyeqianjing_div2_div_div_div_div_card_p{
+    height: 80px;
+    overflow: hidden;
+    font-size: 12px;
+    color: #555;
+    line-height: 20px;
+    padding: 0 32px; 
+    margin-top:40px; 
+    text-align: justify; 
+}
+
+/* 学员信息大div */
+.jiuyeqianjing_div2_div_div_div_div_card_div{
+    height: 70px;
+    position: relative;
+    padding: 10px 10px 20px 20px;
+    background: #fafafa; display:block-inline;
+}
+
+/* 学员头像 */
+.jiuyeqianjing_div2_div_div_div_div_div_img{
+    top: 10px;
+    left: 30px;
+    position: absolute;
+    border-radius: 50%;
+}
+
+/* 学员姓名 */
+.jiuyeqianjing_div2_div_div_div_div_div_div{
+    color: #555;
+    height: 24px;
+    font-size: 12px;
+    padding-left: 80px; 
+    line-height: 24px;
+    overflow: hidden;
+    text-align: left;
+}
+
+/* 第几期学员 */
+.jiuyeqianjing_div2_div_div_div_div_div_div2{
+    height: 24px;
+    color: #999;
+    display: block;
+    font-size: 12px;
+    text-align: left;
+    line-height: 24px;
+    padding-left: 80px; 
 }
 
 
@@ -240,10 +347,72 @@ a:hover {text-decoration:underline ; color:white;}
     margin-top: 40px;
 }
 
+
 .guanyuwomen_div1{
     line-height: 60px;
     height: 50px;
     text-align: left;
     font-size: 18px;
     color: #333;
+}
+
+
+
+/************************** 页尾 **************************/
+
+/* footer的大div */
+.footer_div{
+    height: 80px;
+    margin-top: 20px;
+    text-align:center; 
+}
+
+/* footer的body */
+.footer_body{
+    width: 1000px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* footer的body > 第一个div*/
+.footer_body_div1{
+    margin-top:20px;
+}
+
+/* qq图标 */
+.footer_body_div1_qq{
+    width: 18px;
+    margin-right: 15px;
+}
+
+/* 微信图标 */
+.footer_body_div1_weixin{
+    width: 25px;
+    margin-right: 15px;
+}
+
+/* footer的底部连接大div */
+.footer_body_about{
+    margin-top:15px;
+}
+
+/* footer底部超链接样式 */
+.footer_div2_a{
+    color: #666;
+    font-size: 12px; 
+    padding: 4px 10px; 
+}
+
+/* footer底部隔行符样式 */
+.footer_div2_i{
+    font-size: 12px; 
+    color: #E4E4E4;
+    font-style: normal;
+}
+
+/* footer底部的备案信息样式 */
+.footer_copyrights{
+    color: #999; 
+    padding: 10px 0; 
+    font-size: 12px; 
 }
