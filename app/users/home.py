@@ -21,3 +21,7 @@ def index():
 @userbp.route("/login")
 def getloginhtml():
     return render_template('login.html')
+
+@userbp.route("/reg")
+def getreghtml():
+    return render_template('reg.html')

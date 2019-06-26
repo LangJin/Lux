@@ -9,3 +9,38 @@
     border: 0px solid transparent;
     box-shadow: 0 3px 6px rgba(0,0,0,.2);
 }
+
+/* 登录到大框框 */
+.big_div{
+    width: 500px; height: 400px; margin-top: 10%; background-color: #fff;
+}
+
+/* span */
+.div_span{
+    padding-top: 20px; font-size: 20px; text-align: center;
+}
+
+/* 验证码图片 */
+.captcha{
+    width: 100px; height:50px; margin-left: 100px;
+}
+
+/* 验证码输入框 */
+.captcha_input{
+    width: 150px; height: 50px;
+}
+
+/* 免登陆 */
+.no_pwd_login{
+    color: #999999; font-size: 15px; float: right;
+}
+
+/* 忘记密码 */
+.forget_pwd{
+    padding-left: 180px; color: #999999; font-size: 14px;
+}
+
+/* 注册 */
+.go_regist{
+    padding-left: 10px; color: #999999; font-size: 14px;
+}
