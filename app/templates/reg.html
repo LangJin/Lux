@@ -10,7 +10,44 @@
 </head>
 <body style="background: #F5F5F5;">
 
-  <div class="container card no_border big_div" style="width: 500px; height: 400px; margin-top: 10%;">
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-top " style="height: 55px;">
+    <!-- Brand/logo -->
+    <a class="navbar-brand" href="#" style="padding-left: 5%;padding-top: 1px;">
+        <img src="/images/logo.jfif" class="rounded" alt="logo" style="width:25px;"></img>
+        <a class="logo_title" style="color: rgba(255, 255, 255, 0.75);">浪晋的测试小讲堂</a>
+    </a>
+    <div class="collapse navbar-collapse justify-content-end" style="padding-right: 5%;">
+        <ul class="navbar-nav " style="font-size: 15px;">
+            <li class="nav-item">
+                <a class="nav-link " href="/" >首页</a>
+            </li>
+            <li class="nav-item">
+                    <a class="nav-link" href="/#zhishitixi">知识体系</a>
+                </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/#zhiyefazhan">职业发展</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/#kechengxuxi">课程学习</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/#jiuyeqianjing">就业前景</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/#guanyuwomen">关于我们</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/login">登陆</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/reg">注册</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
+  <div class="container card no_border big_div" style="width: 500px; height: 420px; margin-top: 10%;">
       <span class="div_span">
         <a href="#" style="color: red;">注册</a>
         <!-- <a href="#" style="color: darkseagreen;"> / </a>
@@ -37,7 +74,7 @@
         <div class="form-group">
           <div class="input-group mb-3">
               <div class="input-group-prepend">
-                <span class="input-group-text" style="width:58px; font-size:14px;word-wrap:break-word; ">重复密码</span>
+                <span class="input-group-text" style="width:58px; font-size:12px;word-wrap:break-word; ">重复<br>密码</span>
               </div>
               <input type="password" class="form-control" placeholder="请输入密码" style="height: 50px;">
           </div>
@@ -52,11 +89,11 @@
                 <input type="image" src="/images/captcha.jpg" class="captcha" />
             </div>
         </div>
-        <div class="form-group form-check-inline" style="float: right;">
+        <!-- <div class="form-group form-check-inline" style="float: right;">
           <a href="/login" style="color: #999999; font-size: 14px;">点我登录</a>
-        </div>
+        </div> -->
         <div class="form-group" style="padding-top: 5px;">
-          <input type="button" class="btn btn-primary" value="登陆" style="width: 100%;"/>
+          <input type="button" class="btn btn-primary" value="点我注册" style="width: 100%;"/>
         </div>
       </form>
     </div>
@@ -66,6 +103,4 @@
 <script src="/js/jquery.min.js"></script>
 <script src="/js/popper.min.js"></script>
 <script src="/js/bootstrap.min.js"></script>
-<!-- 导入ajax.js -->
-<script type="text/javascript" src="/js/ajax.js"></script>
 </html>
