@@ -2,7 +2,7 @@
 
 /************************** 全局设定 **************************/
 /* 网页背景颜色 */
-.body{background:#F5F5F5}
+.body{background:#F5F5F5;}
 
 /* a标签去掉下划线 */
 a:hover {text-decoration:none ; color:#35b558;}
@@ -282,7 +282,6 @@ a:hover {text-decoration:none ; color:#35b558;}
     background: #f88;
     text-align: center;
     display: inline-block;
-
 }
 
 /* 学员感言内容 */
@@ -354,6 +353,32 @@ a:hover {text-decoration:none ; color:#35b558;}
     font-size: 18px;
     color: #333;
 }
+
+.guanyuwomen_div2_div_div_div_div_card{
+    width: 300px;
+    border-radius:0;
+    border: 0px solid transparent;
+}
+
+
+/* 讲师姓名 */
+.guanyuwomen_teacher_name{
+    top: 90px;
+    left: 50%;
+    color: #fff;
+    width: 60px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+    font-style: normal; 
+    margin-left: -30px;
+    position: absolute;
+    background: #f88;
+    text-align: center;
+    display: inline-block;
+}
+
+
 
 
 
